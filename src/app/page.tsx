@@ -9,9 +9,9 @@ import { SummaryCard } from '@/components/SummaryCard';
 import { Github, Fuel } from 'lucide-react';
 
 const initialGenerators: GeneratorState[] = [
-  { id: 1, name: 'Diesel Unit 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
-  { id: 2, name: 'Diesel Unit 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
-  { id: 3, name: 'Diesel Unit 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
+  { id: 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
+  { id: 2, name: 'Дизельний агрегат 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
+  { id: 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0 },
 ];
 
 const initialExpenses: ExpenseState = {
@@ -63,8 +63,8 @@ export default function Home() {
           <div className="flex items-center gap-3">
             <Fuel className="h-8 w-8 text-primary" />
             <div>
-              <h1 className="text-2xl font-bold font-headline text-primary">FuelWise Generator</h1>
-              <p className="text-sm text-muted-foreground">Diesel Generator Fuel & Cost Calculator</p>
+              <h1 className="text-2xl font-bold font-headline text-primary">FuelWise Генератор</h1>
+              <p className="text-sm text-muted-foreground">Калькулятор палива та вартості для дизельного генератора</p>
             </div>
           </div>
           <a href="https://github.com/firebase/genkit/tree/main/studio" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
@@ -88,7 +88,7 @@ export default function Home() {
       </main>
 
       <footer className="text-center p-4 text-sm text-muted-foreground border-t mt-8 bg-card">
-          Built with Next.js and ShadCN UI.
+          Створено за допомогою Next.js та ShadCN UI.
       </footer>
     </div>
   );

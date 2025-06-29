@@ -138,10 +138,6 @@ export default function Home() {
           ))}
         </div>
       </main>
-
-      <footer className="text-center p-4 text-sm text-muted-foreground border-t mt-8 bg-card">
-          Розробив: Дмитро Олійник
-      </footer>
     </div>
   );
 }

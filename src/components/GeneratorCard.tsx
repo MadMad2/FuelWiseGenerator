@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Fuel, Cog, Clock, Zap } from "lucide-react";
+import { Fuel, Cog, Clock, Zap, Truck, Wrench, Package } from "lucide-react";
 
 export interface GeneratorState {
   id: number;
@@ -15,6 +15,9 @@ export interface GeneratorState {
   initialFuel: number;
   scheduledHours: number;
   readinessHours: number;
+  relocation: number;
+  maintenance: number;
+  componentReplacement: number;
 }
 
 interface GeneratorCardProps {
@@ -23,11 +26,15 @@ interface GeneratorCardProps {
 }
 
 export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate }) => {
-  const scheduledConsumption = generator.scheduledHours * generator.fuelRate;
-  const readinessConsumption = generator.readinessHours * generator.fuelRate;
-  const totalConsumption = scheduledConsumption + readinessConsumption;
-  const remainingFuel = generator.initialFuel - totalConsumption;
-  const remainingFuelPercentage = generator.initialFuel > 0 ? (remainingFuel / generator.initialFuel) * 100 : 0;
+  const scheduledConsumption = (generator.scheduledHours || 0) * (generator.fuelRate || 0);
+  const readinessConsumption = (generator.readinessHours || 0) * (generator.fuelRate || 0);
+  const relocationConsumption = generator.relocation || 0;
+  const maintenanceConsumption = generator.maintenance || 0;
+  const componentReplacementConsumption = generator.componentReplacement || 0;
+
+  const totalConsumption = scheduledConsumption + readinessConsumption + relocationConsumption + maintenanceConsumption + componentReplacementConsumption;
+  const remainingFuel = (generator.initialFuel || 0) - totalConsumption;
+  const remainingFuelPercentage = (generator.initialFuel || 0) > 0 ? (remainingFuel / generator.initialFuel) * 100 : 0;
 
   const handleInputChange = (field: keyof GeneratorState, value: string) => {
     const numValue = parseFloat(value);
@@ -60,6 +67,18 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate }) =
           <Label htmlFor={`readinessHours-${generator.id}`}>Години за вимогою</Label>
           <Input id={`readinessHours-${generator.id}`} type="number" value={generator.readinessHours || ''} onChange={(e) => handleInputChange('readinessHours', e.target.value)} placeholder="напр., 24" />
         </div>
+        <div className="space-y-2">
+            <Label htmlFor={`relocation-${generator.id}`} className="flex items-center gap-2"><Truck className="size-4 text-muted-foreground"/>Переїзд (л)</Label>
+            <Input id={`relocation-${generator.id}`} type="number" value={generator.relocation || ''} onChange={(e) => handleInputChange('relocation', e.target.value)} placeholder="напр., 50"/>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor={`maintenance-${generator.id}`} className="flex items-center gap-2"><Wrench className="size-4 text-muted-foreground"/>МВГ (л)</Label>
+            <Input id={`maintenance-${generator.id}`} type="number" value={generator.maintenance || ''} onChange={(e) => handleInputChange('maintenance', e.target.value)} placeholder="напр., 10"/>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor={`componentReplacement-${generator.id}`} className="flex items-center gap-2"><Package className="size-4 text-muted-foreground"/>АМКП (л)</Label>
+            <Input id={`componentReplacement-${generator.id}`} type="number" value={generator.componentReplacement || ''} onChange={(e) => handleInputChange('componentReplacement', e.target.value)} placeholder="напр., 5"/>
+        </div>
       </CardContent>
       <CardFooter className="flex flex-col gap-4 pt-4">
         <div className="w-full space-y-2">
@@ -75,6 +94,13 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate }) =
           <div className="text-right font-mono">{scheduledConsumption.toFixed(2)} л</div>
           <div className="flex items-center gap-2 text-muted-foreground"><Zap className="size-4" /> Використання за вимогою:</div>
           <div className="text-right font-mono">{readinessConsumption.toFixed(2)} л</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Truck className="size-4" /> Переїзд:</div>
+          <div className="text-right font-mono">{relocationConsumption.toFixed(2)} л</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Wrench className="size-4" /> МВГ:</div>
+          <div className="text-right font-mono">{maintenanceConsumption.toFixed(2)} л</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Package className="size-4" /> АМКП:</div>
+          <div className="text-right font-mono">{componentReplacementConsumption.toFixed(2)} л</div>
+          <Separator className="my-1 col-span-2" />
           <div className="flex items-center gap-2 font-semibold"><Fuel className="size-4 text-accent" /> Всього використано:</div>
           <div className="text-right font-mono font-semibold">{totalConsumption.toFixed(2)} л</div>
         </div>

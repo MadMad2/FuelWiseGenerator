@@ -97,10 +97,7 @@ export default function Home() {
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Fuel className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-2xl font-bold font-headline text-primary">FuelWise Генератор</h1>
-              <p className="text-sm text-muted-foreground">Калькулятор палива для дизельних генераторів</p>
-            </div>
+            <h1 className="text-2xl font-bold font-headline text-primary">Калькулятор палива</h1>
           </div>
           <a href="https://github.com/firebase/genkit/tree/main/studio" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
             <Github className="h-6 w-6" />
@@ -143,7 +140,7 @@ export default function Home() {
       </main>
 
       <footer className="text-center p-4 text-sm text-muted-foreground border-t mt-8 bg-card">
-          Створено за допомогою Next.js та ShadCN UI.
+          Розробив: Дмитро Олійник
       </footer>
     </div>
   );

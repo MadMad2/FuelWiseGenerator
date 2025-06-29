@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'FuelWise Генератор',
+  title: 'Калькулятор палива',
   description: 'Калькулятор палива для дизельних генераторів',
 };
 

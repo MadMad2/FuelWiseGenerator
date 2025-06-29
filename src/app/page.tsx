@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { GeneratorState } from '@/components/GeneratorCard';
+import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
 import { Github, Fuel, PlusCircle, Weight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const initialGenerators: GeneratorState[] = [
-  { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0 },
-  { id: Date.now() + 2, name: 'Дизельний агрегат 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0 },
-  { id: Date.now() + 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0 },
+  { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
+  { id: Date.now() + 2, name: 'Дизельний агрегат 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
+  { id: Date.now() + 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
 ];
 
-const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v2';
+const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v3';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v1';
 
 export default function Home() {
@@ -27,15 +27,13 @@ export default function Home() {
     const savedCoefficient = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
     
     if (savedGenerators) {
-      const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate'>[] = JSON.parse(savedGenerators);
+      const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate' | 'additionalExpenses'>[] = JSON.parse(savedGenerators);
       setGenerators(parsedGenerators.map(g => ({
         ...g,
         initialFuel: 0,
         scheduledHours: 0,
         readinessHours: 0,
-        relocation: 0,
-        maintenance: 0,
-        componentReplacement: 0,
+        additionalExpenses: g.additionalExpenses ? g.additionalExpenses.map(exp => ({ ...exp, value: 0 })) : [],
       })));
     } else {
       setGenerators(initialGenerators);
@@ -50,7 +48,12 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoaded) {
-      const dataToSave = generators.map(({ id, name, fuelRate }) => ({ id, name, fuelRate }));
+      const dataToSave = generators.map(({ id, name, fuelRate, additionalExpenses }) => ({
+        id,
+        name,
+        fuelRate,
+        additionalExpenses: additionalExpenses.map(({ id, name }) => ({ id, name, value: 0 })),
+      }));
       localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(dataToSave));
     }
   }, [generators, isLoaded]);
@@ -60,12 +63,43 @@ export default function Home() {
       localStorage.setItem(STORAGE_KEY_COEFFICIENT, kgCoefficient.toString());
     }
   }, [kgCoefficient, isLoaded]);
-
-  const handleGeneratorUpdate = (id: number, field: keyof GeneratorState, value: number | string) => {
+  
+  const handleGeneratorChange = (generatorId: number) => (action: GeneratorAction) => {
     setGenerators(prev =>
-      prev.map(gen => (gen.id === id ? { ...gen, [field]: value } : gen))
+      prev.map(gen => {
+        if (gen.id !== generatorId) {
+          return gen;
+        }
+
+        switch (action.type) {
+          case 'update_field': {
+            return { ...gen, [action.payload.field]: action.payload.value };
+          }
+          case 'add_expense': {
+            const newExpense = { id: Date.now(), name: 'Нова витрата', value: 0 };
+            return { ...gen, additionalExpenses: [...gen.additionalExpenses, newExpense] };
+          }
+          case 'remove_expense':
+            return {
+              ...gen,
+              additionalExpenses: gen.additionalExpenses.filter(exp => exp.id !== action.payload.expenseId),
+            };
+          case 'update_expense': {
+            const { expenseId, field, value } = action.payload;
+            return {
+              ...gen,
+              additionalExpenses: gen.additionalExpenses.map(exp =>
+                exp.id === expenseId ? { ...exp, [field]: value } : exp
+              ),
+            };
+          }
+          default:
+            return gen;
+        }
+      })
     );
   };
+
 
   const addGenerator = () => {
     const newId = Date.now();
@@ -76,9 +110,7 @@ export default function Home() {
       initialFuel: 0,
       scheduledHours: 0,
       readinessHours: 0,
-      relocation: 0,
-      maintenance: 0,
-      componentReplacement: 0,
+      additionalExpenses: [],
     };
     setGenerators(prev => [...prev, newGenerator]);
   };
@@ -131,7 +163,7 @@ export default function Home() {
             <GeneratorCard 
               key={gen.id} 
               generator={gen} 
-              onUpdate={handleGeneratorUpdate} 
+              onUpdate={handleGeneratorChange(gen.id)} 
               onRemove={removeGenerator}
               kgCoefficient={kgCoefficient}
             />

@@ -9,12 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const initialGenerators: GeneratorState[] = [
-  { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
-  { id: Date.now() + 2, name: 'Дизельний агрегат 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
-  { id: Date.now() + 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, additionalExpenses: [] },
+  { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
+  { id: Date.now() + 2, name: 'Дизельний агрегат 2', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
+  { id: Date.now() + 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
 ];
 
-const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v3';
+const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v4';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v1';
 
 export default function Home() {
@@ -33,6 +33,9 @@ export default function Home() {
         initialFuel: 0,
         scheduledHours: 0,
         readinessHours: 0,
+        relocation: 0,
+        maintenance: 0,
+        componentReplacement: 0,
         additionalExpenses: g.additionalExpenses ? g.additionalExpenses.map(exp => ({ ...exp, value: 0 })) : [],
       })));
     } else {
@@ -110,6 +113,9 @@ export default function Home() {
       initialFuel: 0,
       scheduledHours: 0,
       readinessHours: 0,
+      relocation: 0,
+      maintenance: 0,
+      componentReplacement: 0,
       additionalExpenses: [],
     };
     setGenerators(prev => [...prev, newGenerator]);

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Fuel, Cog, Clock, Zap, Package, Trash2, PlusCircle } from "lucide-react";
+import { Fuel, Cog, Clock, Zap, Package, Trash2, PlusCircle, Truck, Wrench } from "lucide-react";
 
 export interface AdditionalExpense {
   id: number;
@@ -23,12 +23,15 @@ export interface GeneratorState {
   initialFuel: number;
   scheduledHours: number;
   readinessHours: number;
+  relocation: number;
+  maintenance: number;
+  componentReplacement: number;
   additionalExpenses: AdditionalExpense[];
 }
 
 export type GeneratorAction =
   | { type: 'update_field'; payload: { field: 'name'; value: string } }
-  | { type: 'update_field'; payload: { field: 'fuelRate' | 'initialFuel' | 'scheduledHours' | 'readinessHours'; value: number } }
+  | { type: 'update_field'; payload: { field: 'fuelRate' | 'initialFuel' | 'scheduledHours' | 'readinessHours' | 'relocation' | 'maintenance' | 'componentReplacement'; value: number } }
   | { type: 'add_expense' }
   | { type: 'remove_expense'; payload: { expenseId: number } }
   | { type: 'update_expense'; payload: { expenseId: number; field: 'name'; value: string } }
@@ -81,9 +84,12 @@ const TimeInput: FC<{
 export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onRemove, kgCoefficient }) => {
   const scheduledConsumption = (generator.scheduledHours || 0) * (generator.fuelRate || 0);
   const readinessConsumption = (generator.readinessHours || 0) * (generator.fuelRate || 0);
+  const relocationConsumption = generator.relocation || 0;
+  const maintenanceConsumption = generator.maintenance || 0;
+  const componentReplacementConsumption = generator.componentReplacement || 0;
   const additionalConsumptionTotal = generator.additionalExpenses.reduce((acc, exp) => acc + (exp.value || 0), 0);
 
-  const totalConsumption = scheduledConsumption + readinessConsumption + additionalConsumptionTotal;
+  const totalConsumption = scheduledConsumption + readinessConsumption + relocationConsumption + maintenanceConsumption + componentReplacementConsumption + additionalConsumptionTotal;
   const remainingFuel = (generator.initialFuel || 0) - totalConsumption;
   const remainingFuelPercentage = (generator.initialFuel || 0) > 0 ? (remainingFuel / generator.initialFuel) * 100 : 0;
 
@@ -91,7 +97,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
     onUpdate({ type: 'update_field', payload: { field: 'name', value: e.target.value }});
   };
 
-  const handleInputChange = (field: 'fuelRate' | 'initialFuel', value: string) => {
+  const handleInputChange = (field: 'fuelRate' | 'initialFuel' | 'relocation' | 'maintenance' | 'componentReplacement', value: string) => {
     const numValue = parseFloat(value);
     onUpdate({ type: 'update_field', payload: { field, value: isNaN(numValue) ? 0 : numValue } });
   };
@@ -160,6 +166,19 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
           onChange={(totalHours) => handleTimeChange('readinessHours', totalHours)}
         />
 
+        <div className="space-y-2">
+            <Label htmlFor={`relocation-${generator.id}`} className="flex items-center gap-2"><Truck className="size-4 text-muted-foreground"/>Переїзд (л)</Label>
+            <Input id={`relocation-${generator.id}`} type="number" value={generator.relocation || ''} onChange={(e) => handleInputChange('relocation', e.target.value)} placeholder="напр., 50"/>
+        </div>
+        <div className="space-y-2">
+            <Label htmlFor={`maintenance-${generator.id}`} className="flex items-center gap-2"><Wrench className="size-4 text-muted-foreground"/>МВГ (л)</Label>
+            <Input id={`maintenance-${generator.id}`} type="number" value={generator.maintenance || ''} onChange={(e) => handleInputChange('maintenance', e.target.value)} placeholder="напр., 10"/>
+        </div>
+        <div className="space-y-2 col-span-1 md:col-span-2">
+            <Label htmlFor={`componentReplacement-${generator.id}`} className="flex items-center gap-2"><Package className="size-4 text-muted-foreground"/>АМКП (л)</Label>
+            <Input id={`componentReplacement-${generator.id}`} type="number" value={generator.componentReplacement || ''} onChange={(e) => handleInputChange('componentReplacement', e.target.value)} placeholder="напр., 5"/>
+        </div>
+
         <div className="space-y-4 col-span-1 md:col-span-2">
           <Separator />
           <div className="flex justify-between items-center pt-2">
@@ -218,6 +237,15 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
           <div className="flex items-center gap-2 text-muted-foreground"><Zap className="size-4" /> По готовності:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{readinessConsumption.toFixed(2)} л <KgDisplay value={readinessConsumption} coefficient={kgCoefficient} /></div>
           
+          <div className="flex items-center gap-2 text-muted-foreground"><Truck className="size-4" /> Переїзд:</div>
+          <div className="text-right font-mono flex items-baseline justify-end">{relocationConsumption.toFixed(2)} л <KgDisplay value={relocationConsumption} coefficient={kgCoefficient} /></div>
+          
+          <div className="flex items-center gap-2 text-muted-foreground"><Wrench className="size-4" /> МВГ:</div>
+          <div className="text-right font-mono flex items-baseline justify-end">{maintenanceConsumption.toFixed(2)} л <KgDisplay value={maintenanceConsumption} coefficient={kgCoefficient} /></div>
+          
+          <div className="flex items-center gap-2 text-muted-foreground"><Package className="size-4" /> АМКП:</div>
+          <div className="text-right font-mono flex items-baseline justify-end">{componentReplacementConsumption.toFixed(2)} л <KgDisplay value={componentReplacementConsumption} coefficient={kgCoefficient} /></div>
+
           {generator.additionalExpenses.map(exp => (
              <React.Fragment key={exp.id}>
                 <div className="flex items-center gap-2 text-muted-foreground truncate"><Package className="size-4" /> {exp.name}:</div>

@@ -92,7 +92,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="py-6 px-4 md:px-8 border-b bg-card">
         <div className="container mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-8">
+      <main className="container mx-auto p-4 md:p-8 flex-grow">
         <div className="mb-8 p-6 bg-card rounded-lg border flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-grow space-y-2">
                 <Label htmlFor="kgCoefficient" className="flex items-center gap-2 font-semibold">
@@ -138,6 +138,9 @@ export default function Home() {
           ))}
         </div>
       </main>
+      <footer className="py-4 text-center text-sm text-muted-foreground">
+        Create Dmytro Oliinyk
+      </footer>
     </div>
   );
 }

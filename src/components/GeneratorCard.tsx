@@ -120,14 +120,14 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
         
         <TimeInput
           id={`scheduled-time-${generator.id}`}
-          label="Плановий час (год:хв)"
+          label="По графіку (год:хв)"
           totalHours={generator.scheduledHours}
           onChange={(totalHours) => handleTimeChange('scheduledHours', totalHours)}
         />
         
         <TimeInput
           id={`readiness-time-${generator.id}`}
-          label="Час за вимогою (год:хв)"
+          label="По готовності (год:хв)"
           totalHours={generator.readinessHours}
           onChange={(totalHours) => handleTimeChange('readinessHours', totalHours)}
         />
@@ -155,10 +155,10 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
         </div>
         <Separator />
         <div className="w-full grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-          <div className="flex items-center gap-2 text-muted-foreground"><Clock className="size-4" /> Планове використання:</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Clock className="size-4" /> По графіку:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{scheduledConsumption.toFixed(2)} л <KgDisplay value={scheduledConsumption} coefficient={kgCoefficient} /></div>
           
-          <div className="flex items-center gap-2 text-muted-foreground"><Zap className="size-4" /> Використання за вимогою:</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><Zap className="size-4" /> По готовності:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{readinessConsumption.toFixed(2)} л <KgDisplay value={readinessConsumption} coefficient={kgCoefficient} /></div>
           
           <div className="flex items-center gap-2 text-muted-foreground"><Truck className="size-4" /> Переїзд:</div>

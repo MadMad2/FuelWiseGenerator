@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from 'react';
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,6 +82,15 @@ const TimeInput: FC<{
 };
 
 export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onRemove, kgCoefficient }) => {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingName) {
+      nameInputRef.current?.focus();
+    }
+  }, [isEditingName]);
+  
   const scheduledConsumption = (generator.scheduledHours || 0) * (generator.fuelRate || 0);
   const readinessConsumption = (generator.readinessHours || 0) * (generator.fuelRate || 0);
   const relocationConsumption = generator.relocation || 0;
@@ -129,12 +138,27 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-grow min-w-0">
             <Cog className="text-primary flex-shrink-0" />
-            <Input 
-                value={generator.name} 
-                onChange={handleNameChange} 
+            {isEditingName ? (
+              <Input
+                ref={nameInputRef}
+                value={generator.name}
+                onChange={handleNameChange}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape') {
+                    setIsEditingName(false);
+                  }
+                }}
                 className="text-2xl font-semibold leading-none tracking-tight border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto truncate"
-            />
-            <Pencil className="size-4 text-muted-foreground/50 flex-shrink-0" />
+              />
+            ) : (
+              <>
+                <h2 className="text-2xl font-semibold leading-none tracking-tight truncate flex-grow">{generator.name}</h2>
+                <Button variant="ghost" size="icon" className="text-muted-foreground/50 hover:text-primary flex-shrink-0 h-auto w-auto p-0" onClick={() => setIsEditingName(true)}>
+                  <Pencil className="size-4" />
+                </Button>
+              </>
+            )}
           </div>
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => onRemove(generator.id)}>
             <Trash2 className="size-4" />

@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Github, Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
+import { TimeCalculatorDialog } from '@/components/TimeCalculatorDialog';
 
 const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
@@ -160,9 +161,6 @@ export default function Home() {
             <Fuel className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">Калькулятор палива</h1>
           </div>
-          <a href="https://github.com/firebase/genkit/tree/main/studio" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-            <Github className="h-6 w-6" />
-          </a>
         </div>
       </header>
 
@@ -260,6 +258,16 @@ export default function Home() {
                           {generators.length === 0 && (
                                <p className="text-center text-muted-foreground py-8">Немає агрегатів для звіту.</p>
                           )}
+                    </DialogContent>
+                </Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Calculator className="mr-2 h-4 w-4" /> Калькулятор часу
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-md">
+                        <TimeCalculatorDialog />
                     </DialogContent>
                 </Dialog>
             </div>

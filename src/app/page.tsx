@@ -1,10 +1,10 @@
 "use client";
 
 import type { FC } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Github, Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package } from 'lucide-react';
+import { Github, Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
 
 const initialGenerators: GeneratorState[] = [
@@ -32,7 +38,6 @@ const KgDisplay: FC<{ value: number, coefficient: number }> = ({ value, coeffici
   return <span className="text-xs text-muted-foreground ml-2">({(value * coefficient).toFixed(2)} кг)</span>;
 };
 
-
 export default function Home() {
   const [generators, setGenerators] = useState<GeneratorState[]>([]);
   const [kgCoefficient, setKgCoefficient] = useState<number>(0.85);
@@ -43,15 +48,15 @@ export default function Home() {
     const savedCoefficient = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
     
     if (savedGenerators) {
-      const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate' | 'additionalExpenses'>[] = JSON.parse(savedGenerators);
+      const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate' | 'additionalExpenses' | 'relocation' | 'maintenance' | 'componentReplacement'>[] = JSON.parse(savedGenerators);
       setGenerators(parsedGenerators.map(g => ({
         ...g,
         initialFuel: 0,
         scheduledHours: 0,
         readinessHours: 0,
-        relocation: 0,
-        maintenance: 0,
-        componentReplacement: 0,
+        relocation: g.relocation || 0,
+        maintenance: g.maintenance || 0,
+        componentReplacement: g.componentReplacement || 0,
         additionalExpenses: g.additionalExpenses ? g.additionalExpenses.map(exp => ({ ...exp, value: 0 })) : [],
       })));
     } else {
@@ -67,10 +72,13 @@ export default function Home() {
 
   useEffect(() => {
     if (isLoaded) {
-      const dataToSave = generators.map(({ id, name, fuelRate, additionalExpenses }) => ({
+      const dataToSave = generators.map(({ id, name, fuelRate, additionalExpenses, relocation, maintenance, componentReplacement }) => ({
         id,
         name,
         fuelRate,
+        relocation,
+        maintenance,
+        componentReplacement,
         additionalExpenses: additionalExpenses.map(({ id, name }) => ({ id, name, value: 0 })),
       }));
       localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(dataToSave));
@@ -140,46 +148,6 @@ export default function Home() {
     setGenerators(prev => prev.filter(gen => gen.id !== id));
   };
   
-  const reportData = useMemo(() => {
-    if (generators.length === 0) return null;
-
-    const totals = {
-        initialFuel: 0,
-        scheduled: 0,
-        readiness: 0,
-        relocation: 0,
-        maintenance: 0,
-        componentReplacement: 0,
-        additional: {} as Record<string, number>,
-        totalConsumption: 0,
-    };
-
-    for (const gen of generators) {
-        const scheduledConsumption = (gen.scheduledHours || 0) * (gen.fuelRate || 0);
-        const readinessConsumption = (gen.readinessHours || 0) * (gen.fuelRate || 0);
-        const additionalConsumptionTotal = gen.additionalExpenses.reduce((acc, exp) => acc + (exp.value || 0), 0);
-        
-        totals.initialFuel += gen.initialFuel || 0;
-        totals.scheduled += scheduledConsumption;
-        totals.readiness += readinessConsumption;
-        totals.relocation += gen.relocation || 0;
-        totals.maintenance += gen.maintenance || 0;
-        totals.componentReplacement += gen.componentReplacement || 0;
-        
-        gen.additionalExpenses.forEach(exp => {
-            if(exp.name.trim()){
-                totals.additional[exp.name] = (totals.additional[exp.name] || 0) + (exp.value || 0);
-            }
-        });
-
-        totals.totalConsumption += scheduledConsumption + readinessConsumption + (gen.relocation || 0) + (gen.maintenance || 0) + (gen.componentReplacement || 0) + additionalConsumptionTotal;
-    }
-
-    const remainingFuel = totals.initialFuel - totals.totalConsumption;
-
-    return { ...totals, remainingFuel };
-  }, [generators]);
-
   if (!isLoaded) {
     return null;
   }
@@ -224,46 +192,74 @@ export default function Home() {
                             <FileText className="mr-2 h-4 w-4" /> Показати звіт
                         </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-md">
+                    <DialogContent className="max-w-2xl">
                         <DialogHeader>
-                            <DialogTitle>Загальний звіт</DialogTitle>
+                            <DialogTitle>Звіт по агрегатам</DialogTitle>
                             <DialogDescription>
-                                Сумарний звіт по всім {generators.length} агрегатам.
+                                Детальний звіт по кожному з {generators.length} агрегатів.
                             </DialogDescription>
                         </DialogHeader>
-                        {reportData && (
-                            <div className="text-sm space-y-4 max-h-[70vh] overflow-y-auto pr-4">
-                                <div className="grid grid-cols-1 gap-3 rounded-lg border p-4">
-                                    <div className="flex justify-between items-baseline">
-                                        <span className="text-muted-foreground">Початкове паливо:</span>
-                                        <span className="font-semibold flex items-baseline">{reportData.initialFuel.toFixed(2)} л <KgDisplay value={reportData.initialFuel} coefficient={kgCoefficient} /></span>
-                                    </div>
-                                    <div className="flex justify-between items-baseline">
-                                        <span className="text-muted-foreground text-destructive">Всього використано:</span>
-                                        <span className="font-semibold text-destructive flex items-baseline">{reportData.totalConsumption.toFixed(2)} л <KgDisplay value={reportData.totalConsumption} coefficient={kgCoefficient} /></span>
-                                    </div>
-                                    <div className="flex justify-between items-baseline">
-                                        <span className="text-muted-foreground text-primary">Залишок палива:</span>
-                                        <span className="font-semibold text-primary flex items-baseline">{reportData.remainingFuel.toFixed(2)} л <KgDisplay value={reportData.remainingFuel} coefficient={kgCoefficient} /></span>
-                                    </div>
-                                </div>
-                                <Separator />
-                                <div className="space-y-2">
-                                    <h4 className="font-semibold">Деталізація витрат</h4>
-                                    <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Clock className="size-4 text-muted-foreground" />По графіку:</div> <span className='font-mono flex items-baseline'>{reportData.scheduled.toFixed(2)} л <KgDisplay value={reportData.scheduled} coefficient={kgCoefficient} /></span></div>
-                                    <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Zap className="size-4 text-muted-foreground" />По готовності:</div> <span className='font-mono flex items-baseline'>{reportData.readiness.toFixed(2)} л <KgDisplay value={reportData.readiness} coefficient={kgCoefficient} /></span></div>
-                                    <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Truck className="size-4 text-muted-foreground" />Переїзд:</div> <span className='font-mono flex items-baseline'>{reportData.relocation.toFixed(2)} л <KgDisplay value={reportData.relocation} coefficient={kgCoefficient} /></span></div>
-                                    <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Wrench className="size-4 text-muted-foreground" />МВГ:</div> <span className='font-mono flex items-baseline'>{reportData.maintenance.toFixed(2)} л <KgDisplay value={reportData.maintenance} coefficient={kgCoefficient} /></span></div>
-                                    <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Package className="size-4 text-muted-foreground" />АМКП:</div> <span className='font-mono flex items-baseline'>{reportData.componentReplacement.toFixed(2)} л <KgDisplay value={reportData.componentReplacement} coefficient={kgCoefficient} /></span></div>
-                                    
-                                    {Object.entries(reportData.additional).length > 0 && <Separator className="my-2"/>}
+                          <Accordion type="single" collapsible className="w-full max-h-[70vh] overflow-y-auto -mr-6 pr-6">
+                              {generators.map(gen => {
+                                  const scheduledConsumption = (gen.scheduledHours || 0) * (gen.fuelRate || 0);
+                                  const readinessConsumption = (gen.readinessHours || 0) * (gen.fuelRate || 0);
+                                  const relocationConsumption = gen.relocation || 0;
+                                  const maintenanceConsumption = gen.maintenance || 0;
+                                  const componentReplacementConsumption = gen.componentReplacement || 0;
+                                  const additionalConsumptionTotal = gen.additionalExpenses.reduce((acc, exp) => acc + (exp.value || 0), 0);
+                                  const totalConsumption = scheduledConsumption + readinessConsumption + relocationConsumption + maintenanceConsumption + componentReplacementConsumption + additionalConsumptionTotal;
+                                  const remainingFuel = (gen.initialFuel || 0) - totalConsumption;
+                                  
+                                  return (
+                                      <AccordionItem value={`item-${gen.id}`} key={gen.id}>
+                                          <AccordionTrigger>
+                                              <div className="flex justify-between items-center w-full pr-2">
+                                                  <span className="font-semibold text-left">{gen.name}</span>
+                                                  <span className="text-sm text-muted-foreground whitespace-nowrap ml-4">
+                                                      Використано: <span className="font-mono text-destructive">{totalConsumption.toFixed(2)} л</span>
+                                                  </span>
+                                              </div>
+                                          </AccordionTrigger>
+                                          <AccordionContent>
+                                              <div className="text-sm space-y-4 pt-2">
+                                                  <div className="grid grid-cols-1 gap-3 rounded-lg border p-4">
+                                                      <div className="flex justify-between items-baseline">
+                                                          <span className="text-muted-foreground">Початкове паливо:</span>
+                                                          <span className="font-semibold flex items-baseline">{(gen.initialFuel || 0).toFixed(2)} л <KgDisplay value={gen.initialFuel || 0} coefficient={kgCoefficient} /></span>
+                                                      </div>
+                                                      <div className="flex justify-between items-baseline">
+                                                          <span className="text-muted-foreground text-destructive">Всього використано:</span>
+                                                          <span className="font-semibold text-destructive flex items-baseline">{totalConsumption.toFixed(2)} л <KgDisplay value={totalConsumption} coefficient={kgCoefficient} /></span>
+                                                      </div>
+                                                      <div className="flex justify-between items-baseline">
+                                                          <span className="text-muted-foreground text-primary">Залишок палива:</span>
+                                                          <span className="font-semibold text-primary flex items-baseline">{remainingFuel.toFixed(2)} л <KgDisplay value={remainingFuel} coefficient={kgCoefficient} /></span>
+                                                      </div>
+                                                  </div>
+                                                  
+                                                  <div className="space-y-2 p-4 border rounded-lg">
+                                                      <h4 className="font-semibold -mx-4 -mt-4 mb-3 p-3 border-b bg-muted/50 rounded-t-lg">Деталізація витрат</h4>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Clock className="size-4 text-muted-foreground" />По графіку:</div> <span className='font-mono flex items-baseline'>{scheduledConsumption.toFixed(2)} л <KgDisplay value={scheduledConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Zap className="size-4 text-muted-foreground" />По готовності:</div> <span className='font-mono flex items-baseline'>{readinessConsumption.toFixed(2)} л <KgDisplay value={readinessConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Truck className="size-4 text-muted-foreground" />Переїзд:</div> <span className='font-mono flex items-baseline'>{relocationConsumption.toFixed(2)} л <KgDisplay value={relocationConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Wrench className="size-4 text-muted-foreground" />МВГ:</div> <span className='font-mono flex items-baseline'>{maintenanceConsumption.toFixed(2)} л <KgDisplay value={maintenanceConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Package className="size-4 text-muted-foreground" />АМКП:</div> <span className='font-mono flex items-baseline'>{componentReplacementConsumption.toFixed(2)} л <KgDisplay value={componentReplacementConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      
+                                                      {gen.additionalExpenses.filter(e => e.name.trim()).length > 0 && <Separator className="my-2"/>}
 
-                                    {Object.entries(reportData.additional).map(([name, value]) => (
-                                       <div key={name} className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Package className="size-4 text-muted-foreground" />{name}:</div> <span className='font-mono flex items-baseline'>{value.toFixed(2)} л <KgDisplay value={value} coefficient={kgCoefficient} /></span></div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                                                      {gen.additionalExpenses.filter(e => e.name.trim()).map(exp => (
+                                                         <div key={exp.id} className="flex justify-between items-baseline"><div className='flex items-center gap-2 truncate'><Package className="size-4 text-muted-foreground" />{exp.name}:</div> <span className='font-mono flex items-baseline whitespace-nowrap'>{(exp.value || 0).toFixed(2)} л <KgDisplay value={exp.value || 0} coefficient={kgCoefficient} /></span></div>
+                                                      ))}
+                                                  </div>
+                                              </div>
+                                          </AccordionContent>
+                                      </AccordionItem>
+                                  )
+                              })}
+                          </Accordion>
+                          {generators.length === 0 && (
+                               <p className="text-center text-muted-foreground py-8">Немає агрегатів для звіту.</p>
+                          )}
                     </DialogContent>
                 </Dialog>
             </div>

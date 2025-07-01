@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Fuel, Cog, Clock, Zap, Package, Trash2, PlusCircle, Truck, Wrench } from "lucide-react";
+import { Fuel, Cog, Clock, Zap, Package, Trash2, PlusCircle, Truck, Wrench, Pencil } from "lucide-react";
 
 export interface AdditionalExpense {
   id: number;
@@ -134,6 +134,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
                 onChange={handleNameChange} 
                 className="text-2xl font-semibold leading-none tracking-tight border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto truncate"
             />
+            <Pencil className="size-4 text-muted-foreground/50 flex-shrink-0" />
           </div>
           <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive flex-shrink-0" onClick={() => onRemove(generator.id)}>
             <Trash2 className="size-4" />
@@ -190,7 +191,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
           <div className="space-y-3">
             {generator.additionalExpenses.map(exp => (
               <div key={exp.id} className="flex items-end gap-2">
-                <div className="flex-grow space-y-1">
+                <div className="flex-grow space-y-1 relative">
                   <Label htmlFor={`exp-name-${exp.id}`} className="sr-only">Назва витрати</Label>
                   <Input
                     id={`exp-name-${exp.id}`}
@@ -198,7 +199,9 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
                     value={exp.name}
                     onChange={(e) => updateExpense(exp.id, 'name', e.target.value)}
                     placeholder="Назва витрати"
+                    className="pr-8"
                   />
+                  <Pencil className="absolute right-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/50 pointer-events-none" />
                 </div>
                 <div className="w-28 shrink-0 space-y-1">
                   <Label htmlFor={`exp-value-${exp.id}`} className="sr-only">Витрата (л)</Label>

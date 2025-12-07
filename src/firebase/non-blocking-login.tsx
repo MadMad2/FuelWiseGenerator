@@ -1,10 +1,11 @@
 'use client';
 import {
-  Auth, // Import Auth type for type hinting
+  Auth,
   signInAnonymously,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  // Assume getAuth and app are initialized elsewhere
+  signInWithPopup,
+  GoogleAuthProvider,
 } from 'firebase/auth';
 
 /** Initiate anonymous sign-in (non-blocking). */
@@ -27,6 +28,15 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): Promise<void> {
   return signInWithEmailAndPassword(authInstance, email, password).then(() => {}).catch(err => {
     console.error("Email sign-in failed", err);
+    throw err;
+  });
+}
+
+/** Initiate Google sign-in (non-blocking). */
+export function initiateGoogleSignIn(authInstance: Auth): Promise<void> {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(authInstance, provider).then(() => {}).catch(err => {
+    console.error("Google sign-in failed", err);
     throw err;
   });
 }

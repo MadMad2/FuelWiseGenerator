@@ -31,6 +31,7 @@ import { TextReportDialog } from '@/components/TextReportDialog';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { AuthDialog } from '@/components/AuthDialog';
 
 const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v3';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v2';
@@ -58,6 +59,8 @@ export default function HomePage() {
   const [generators, setGenerators] = useState<GeneratorState[]>([]);
   const [kgCoefficient, setKgCoefficient] = useState<number>(0.85);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
+
 
   // --- Data Migration Effect ---
   useEffect(() => {
@@ -281,6 +284,13 @@ export default function HomePage() {
         setDocumentNonBlocking(settingsDocRef, { kgCoefficient: value }, { merge: true });
     }
   }
+
+  // Close auth dialog on successful login
+  useEffect(() => {
+    if (user && isAuthDialogOpen) {
+      setIsAuthDialogOpen(false);
+    }
+  }, [user, isAuthDialogOpen]);
   
   if (isUserLoading || !isLoaded) {
     return <div className="min-h-screen flex items-center justify-center">Завантаження...</div>;
@@ -301,14 +311,16 @@ export default function HomePage() {
                     <LogIn className="h-5 w-5 rotate-180" />
                 </Button>
             ) : (
-                <>
-                <Button variant="ghost" size="icon" onClick={() => router.push('/login')} title="Увійти">
-                    <LogIn className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => router.push('/signup')} title="Зареєструватися">
-                    <UserPlus className="h-5 w-5" />
-                </Button>
-                </>
+                <Dialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <LogIn className="mr-2 h-4 w-4" /> Увійти
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <AuthDialog />
+                    </DialogContent>
+                </Dialog>
             )}
           </div>
         </div>

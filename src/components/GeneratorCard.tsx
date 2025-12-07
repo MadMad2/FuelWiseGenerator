@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Fuel, Clock, Zap, Package, Trash2, PlusCircle, Truck, Pencil, Power } from "lucide-react";
+import { Fuel, Clock, Zap, Package, Trash2, PlusCircle, Truck, Pencil, Cog } from "lucide-react";
 
 // Inline SVG for the rifle icon
 const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -164,7 +164,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-grow min-w-0">
-            <Power className="text-primary flex-shrink-0" />
+            <Cog className="text-primary flex-shrink-0 animate-spin-slow" />
             {isEditingName ? (
               <Input
                 ref={nameInputRef}

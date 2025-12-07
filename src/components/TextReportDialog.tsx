@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef } from 'react';
-import type { GeneratorState, AdditionalExpense } from '@/components/GeneratorCard';
+import type { GeneratorState } from '@/components/GeneratorCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileSignature, Copy, Droplets, Weight, Info } from 'lucide-react';
+import { FileSignature, Copy, Droplets, Weight, Info, Pencil } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 
@@ -46,7 +46,6 @@ const DYNAMIC_VALUES: DynamicValue[] = [
 
 const STORAGE_KEY_TEMPLATE = 'fuelwise_report_template_v2';
 
-// Function to create a unique placeholder from a name
 const sanitizeNameForPlaceholder = (name: string) => {
   return name.replace(/[^a-zA-Z0-9]/g, '_');
 };
@@ -62,6 +61,7 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
     const { toast } = useToast();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedGeneratorId, setSelectedGeneratorId] = useState<string | undefined>(generators[0]?.id.toString());
+    const [isEditing, setIsEditing] = useState(false);
 
     const calculations = useMemo(() => {
         const calcs = new Map<string, any>();
@@ -127,21 +127,18 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
         calculations.forEach((genData) => {
             const genNamePlaceholder = genData.sanitizedName;
 
-            // Main generator values
             report = report.replace(new RegExp(`{{gen.${genNamePlaceholder}.name}}`, 'g'), genData.name);
             DYNAMIC_VALUES.forEach(val => {
                 report = report.replace(new RegExp(`{{gen.${genNamePlaceholder}.${val.key}.liters}}`, 'g'), genData[val.key].liters);
                 report = report.replace(new RegExp(`{{gen.${genNamePlaceholder}.${val.key}.kg}}`, 'g'), genData[val.key].kg);
             });
             
-            // Additional expenses
             genData.additionalExpenses.forEach((expValues: {liters: string, kg: string}, expName: string) => {
                  report = report.replace(new RegExp(`{{gen.${genNamePlaceholder}.exp.${expName}.liters}}`, 'g'), expValues.liters);
                  report = report.replace(new RegExp(`{{gen.${genNamePlaceholder}.exp.${expName}.kg}}`, 'g'), expValues.kg);
             });
         });
 
-        // Clean up any un-replaced placeholders
         report = report.replace(/{{[^}]+}}/g, '[немає даних]');
         
         return report;
@@ -150,6 +147,7 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
     const handleSaveTemplate = () => {
         localStorage.setItem(STORAGE_KEY_TEMPLATE, template);
         toast({ title: "Шаблон збережено!", description: "Ваш шаблон звіту було збережено в локальному сховищі." });
+        setIsEditing(false);
     };
 
     const handleCopyToClipboard = (text: string) => {
@@ -175,94 +173,120 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
         return Array.from(expenses.entries());
     }, [selectedGenerator]);
 
+
+    if (isEditing) {
+        return (
+             <>
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <Pencil className="size-6 text-primary" />
+                        Редактор шаблону звіту
+                    </DialogTitle>
+                    <DialogDescription>
+                        Створіть єдиний шаблон звіту. Оберіть агрегат, щоб додати його дані, та побудуйте звіт будь-якої складності.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 max-h-[70vh]">
+                    <div className='flex flex-col gap-4'>
+                        <div className="flex justify-between items-center">
+                           <h3 className="font-semibold">Шаблон</h3>
+                           <Button onClick={handleSaveTemplate} size="sm">Зберегти і закрити</Button>
+                        </div>
+                        <Textarea 
+                            ref={textareaRef}
+                            value={template}
+                            onChange={e => setTemplate(e.target.value)}
+                            rows={10}
+                            placeholder="Введіть текст вашого звіту тут..."
+                            className="text-sm"
+                        />
+                        <div className='space-y-3 p-3 border rounded-lg'>
+                            <h4 className='text-sm font-medium'>Додавання даних до шаблону</h4>
+                             <Select onValueChange={setSelectedGeneratorId} value={selectedGeneratorId}>
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Оберіть агрегат для вставки даних" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {generators.map(gen => (
+                                        <SelectItem key={gen.id} value={gen.id.toString()}>{gen.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {selectedGeneratorId ? (
+                                 <ScrollArea className="h-40">
+                                    <div className="flex flex-wrap gap-2 p-1">
+                                        <Badge variant="secondary" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.name}}`)} className="cursor-pointer">Назва агрегату</Badge>
+                                        {DYNAMIC_VALUES.map(val => (
+                                            <div key={val.key} className="flex gap-1">
+                                                <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.${val.key}.liters}}`)} className="cursor-pointer flex items-center gap-1.5"><Droplets className="size-3" />{val.label}</Badge>
+                                                <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.${val.key}.kg}}`)} className="cursor-pointer flex items-center gap-1.5"><Weight className="size-3" />{val.label}</Badge>
+                                            </div>
+                                        ))}
+                                        {uniqueAdditionalExpenses.length > 0 && (
+                                           <>
+                                             <div className='w-full text-xs text-muted-foreground pt-2'>Додаткові витрати для "{selectedGenerator?.name}"</div>
+                                             {uniqueAdditionalExpenses.map(([sanitizedName, originalName]) => (
+                                                  <div key={sanitizedName} className="flex gap-1">
+                                                      <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.exp.${sanitizedName}.liters}}`)} className="cursor-pointer flex items-center gap-1.5"><Droplets className="size-3" />{originalName}</Badge>
+                                                      <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.exp.${sanitizedName}.kg}}`)} className="cursor-pointer flex items-center gap-1.5"><Weight className="size-3" />{originalName}</Badge>
+                                                  </div>
+                                              ))}
+                                           </>
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            ) : (
+                                <Alert variant="default" className="mt-2">
+                                    <Info className="h-4 w-4" />
+                                    <AlertDescription>
+                                        Оберіть агрегат, щоб побачити доступні для вставки змінні.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className='flex flex-col gap-4'>
+                        <h3 className="font-semibold">Результат (попередній перегляд)</h3>
+                        <ScrollArea className="h-[calc(70vh-8rem)] rounded-md border bg-muted/50 p-4">
+                            <pre className="text-sm whitespace-pre-wrap font-sans">
+                                {finalReport || <span className="text-muted-foreground">Згенерований звіт з'явиться тут.</span>}
+                            </pre>
+                        </ScrollArea>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                     <FileSignature className="size-6 text-primary" />
-                    Конструктор текстового звіту
+                    Текстовий звіт
                 </DialogTitle>
                 <DialogDescription>
-                    Створіть єдиний шаблон звіту. Оберіть агрегат, щоб додати його дані, та побудуйте звіт будь-якої складності.
+                    Сформований звіт на основі ваших даних та шаблону.
                 </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4 max-h-[70vh]">
-                {/* Left side - Template Editor */}
-                <div className='flex flex-col gap-4'>
-                    <div className="flex justify-between items-center">
-                       <h3 className="font-semibold">1. Редактор шаблону</h3>
-                       <Button onClick={handleSaveTemplate} size="sm">Зберегти шаблон</Button>
-                    </div>
-                    <Textarea 
-                        ref={textareaRef}
-                        value={template}
-                        onChange={e => setTemplate(e.target.value)}
-                        rows={10}
-                        placeholder="Введіть текст вашого звіту тут..."
-                        className="text-sm"
-                    />
-                    <div className='space-y-3 p-3 border rounded-lg'>
-                        <h4 className='text-sm font-medium'>Додавання даних до шаблону</h4>
-                         <Select onValueChange={setSelectedGeneratorId} value={selectedGeneratorId}>
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Оберіть агрегат для вставки даних" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {generators.map(gen => (
-                                    <SelectItem key={gen.id} value={gen.id.toString()}>{gen.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        {selectedGeneratorId ? (
-                             <ScrollArea className="h-40">
-                                <div className="flex flex-wrap gap-2 p-1">
-                                    <Badge variant="secondary" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.name}}`)} className="cursor-pointer">Назва агрегату</Badge>
-                                    {DYNAMIC_VALUES.map(val => (
-                                        <div key={val.key} className="flex gap-1">
-                                            <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.${val.key}.liters}}`)} className="cursor-pointer flex items-center gap-1.5"><Droplets className="size-3" />{val.label}</Badge>
-                                            <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.${val.key}.kg}}`)} className="cursor-pointer flex items-center gap-1.5"><Weight className="size-3" />{val.label}</Badge>
-                                        </div>
-                                    ))}
-                                    {uniqueAdditionalExpenses.length > 0 && (
-                                       <>
-                                         <div className='w-full text-xs text-muted-foreground pt-2'>Додаткові витрати для "{selectedGenerator?.name}"</div>
-                                         {uniqueAdditionalExpenses.map(([sanitizedName, originalName]) => (
-                                              <div key={sanitizedName} className="flex gap-1">
-                                                  <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.exp.${sanitizedName}.liters}}`)} className="cursor-pointer flex items-center gap-1.5"><Droplets className="size-3" />{originalName}</Badge>
-                                                  <Badge variant="outline" onClick={() => handleInsertPlaceholder(`{{gen.${selectedGeneratorSanitizedName}.exp.${sanitizedName}.kg}}`)} className="cursor-pointer flex items-center gap-1.5"><Weight className="size-3" />{originalName}</Badge>
-                                              </div>
-                                          ))}
-                                       </>
-                                    )}
-                                </div>
-                            </ScrollArea>
-                        ) : (
-                            <Alert variant="default" className="mt-2">
-                                <Info className="h-4 w-4" />
-                                <AlertDescription>
-                                    Оберіть агрегат, щоб побачити доступні для вставки змінні.
-                                </AlertDescription>
-                            </Alert>
-                        )}
-                    </div>
+            <div className='flex flex-col gap-4 mt-4'>
+                <div className="flex justify-end items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Pencil className="mr-2 size-4"/>
+                        Редагувати шаблон
+                    </Button>
+                    <Button variant="default" size="sm" onClick={() => handleCopyToClipboard(finalReport)} disabled={!finalReport}>
+                        <Copy className="mr-2 size-4"/>
+                        Копіювати звіт
+                    </Button>
                 </div>
-
-                {/* Right side - Preview */}
-                <div className='flex flex-col gap-4'>
-                    <div className="flex justify-between items-center">
-                        <h3 className="font-semibold">2. Результат</h3>
-                        <Button variant="outline" size="sm" onClick={() => handleCopyToClipboard(finalReport)} disabled={!finalReport}>
-                            <Copy className="mr-2 size-4"/>
-                            Копіювати
-                        </Button>
-                    </div>
-                    <ScrollArea className="h-[calc(70vh-8rem)] rounded-md border bg-muted/50 p-4">
-                        <pre className="text-sm whitespace-pre-wrap font-sans">
-                            {finalReport || <span className="text-muted-foreground">Згенерований звіт з'явиться тут.</span>}
-                        </pre>
-                    </ScrollArea>
-                </div>
+                <ScrollArea className="h-[60vh] rounded-md border bg-muted/50 p-4">
+                    <pre className="text-sm whitespace-pre-wrap font-sans">
+                        {finalReport || <span className="text-muted-foreground">Згенерований звіт з'явиться тут.</span>}
+                    </pre>
+                </ScrollArea>
             </div>
         </>
     );

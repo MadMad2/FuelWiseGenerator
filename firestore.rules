@@ -131,12 +131,7 @@ service cloud.firestore {
        * @principle   Enforces strict document ownership based on the user's ID in the path.
        */
       match /generatorUnits/{generatorUnitId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
-
+        allow read, write: if isOwner(userId);
         /**
          * @description Secures usage records for a specific generator unit.
          * @path        /users/{userId}/generatorUnits/{generatorUnitId}/usageRecords/{usageRecordId}
@@ -185,3 +180,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

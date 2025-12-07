@@ -4,10 +4,10 @@ import type { FC } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, doc, setDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, doc, setDoc, onSnapshot, writeBatch, getDocs, getDoc } from 'firebase/firestore';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Package, Pencil, Calculator, FileSignature, LogIn, UserPlus } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Package, Pencil, Calculator, FileSignature, LogIn, UserPlus, Engine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -61,8 +61,10 @@ const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
 
 const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v3';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v2';
-const MIGRATION_DONE_KEY = 'fuelwise_migration_done_v1';
+const STORAGE_KEY_TEMPLATE = 'fuelwise_template_v1';
+const MIGRATION_DONE_KEY = 'fuelwise_migration_done_v2';
 
+const DEFAULT_TEMPLATE = `Звіт по агрегатам:\n\nАгрегат: {{gen.Дизельний_агрегат_1.name}}\nЗалишок: {{gen.Дизельний_агрегат_1.remainingFuel.liters}} л\n\nАгрегат: {{gen.Дизельний_агрегат_2.name}}\nЗалишок: {{gen.Дизельний_агрегат_2.remainingFuel.liters}} л`;
 
 const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
@@ -84,6 +86,7 @@ export default function HomePage() {
 
   const [generators, setGenerators] = useState<GeneratorState[]>([]);
   const [kgCoefficient, setKgCoefficient] = useState<number>(0.85);
+  const [reportTemplate, setReportTemplate] = useState<string>(DEFAULT_TEMPLATE);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false);
 
@@ -93,11 +96,14 @@ export default function HomePage() {
     if (user && firestore && !isUserLoading && !localStorage.getItem(MIGRATION_DONE_KEY)) {
       const localGeneratorsRaw = localStorage.getItem(STORAGE_KEY_GENERATORS);
       const localCoefficientRaw = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
+      const localTemplateRaw = localStorage.getItem(STORAGE_KEY_TEMPLATE);
 
-      if (localGeneratorsRaw || localCoefficientRaw) {
+      if (localGeneratorsRaw || localCoefficientRaw || localTemplateRaw) {
         const migrate = async () => {
           try {
             const batch = writeBatch(firestore);
+            const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
+            const settingsUpdate: { [key: string]: any } = {};
 
             // Migrate generators
             if (localGeneratorsRaw) {
@@ -112,8 +118,16 @@ export default function HomePage() {
 
             // Migrate coefficient
             if (localCoefficientRaw) {
-              const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
-              batch.set(settingsDocRef, { kgCoefficient: parseFloat(localCoefficientRaw) }, { merge: true });
+              settingsUpdate.kgCoefficient = parseFloat(localCoefficientRaw);
+            }
+            
+            // Migrate template
+            if (localTemplateRaw) {
+                settingsUpdate.reportTemplate = localTemplateRaw;
+            }
+
+            if(Object.keys(settingsUpdate).length > 0) {
+              batch.set(settingsDocRef, settingsUpdate, { merge: true });
             }
             
             await batch.commit();
@@ -122,6 +136,7 @@ export default function HomePage() {
             localStorage.setItem(MIGRATION_DONE_KEY, 'true');
             localStorage.removeItem(STORAGE_KEY_GENERATORS);
             localStorage.removeItem(STORAGE_KEY_COEFFICIENT);
+            localStorage.removeItem(STORAGE_KEY_TEMPLATE);
             
             toast({
               title: "Дані перенесено!",
@@ -143,8 +158,8 @@ export default function HomePage() {
         const generatorsColRef = collection(firestore, 'users', user.uid, 'generators');
         
         Promise.all([
-          onSnapshot(settingsDocRef, (docSnap) => docSnap),
-          onSnapshot(generatorsColRef, (colSnap) => colSnap)
+          getDoc(settingsDocRef),
+          getDocs(generatorsColRef)
         ]).then(([settingsSnap, generatorsSnap]) => {
            if (!settingsSnap.exists() && generatorsSnap.empty) {
               migrate();
@@ -187,6 +202,9 @@ export default function HomePage() {
               if (settings.kgCoefficient) {
                   setKgCoefficient(settings.kgCoefficient);
               }
+              if (settings.reportTemplate) {
+                  setReportTemplate(settings.reportTemplate);
+              }
           }
       });
       unsubscribe = [unsubGenerators, unsubSettings];
@@ -195,10 +213,16 @@ export default function HomePage() {
     else {
       const savedGenerators = localStorage.getItem(STORAGE_KEY_GENERATORS);
       const savedCoefficient = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
+      const savedTemplate = localStorage.getItem(STORAGE_KEY_TEMPLATE);
       
       setGenerators(savedGenerators ? JSON.parse(savedGenerators) : initialGenerators);
       if (savedCoefficient) {
         setKgCoefficient(parseFloat(savedCoefficient));
+      }
+      if (savedTemplate) {
+        setReportTemplate(savedTemplate);
+      } else {
+        setReportTemplate(DEFAULT_TEMPLATE);
       }
       setIsLoaded(true);
     }
@@ -214,12 +238,13 @@ export default function HomePage() {
       try {
         localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(generators));
         localStorage.setItem(STORAGE_KEY_COEFFICIENT, kgCoefficient.toString());
+        localStorage.setItem(STORAGE_KEY_TEMPLATE, reportTemplate);
       } catch (error) {
         console.error("Could not write to localStorage:", error);
         toast({ variant: 'destructive', title: 'Не вдалося зберегти дані локально.' });
       }
     }
-  }, [generators, kgCoefficient, isLoaded, user, toast]);
+  }, [generators, kgCoefficient, reportTemplate, isLoaded, user, toast]);
 
   
   const handleGeneratorChange = (generatorId: string | number) => (action: GeneratorAction) => {
@@ -308,6 +333,14 @@ export default function HomePage() {
     if (user && firestore) {
         const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
         setDocumentNonBlocking(settingsDocRef, { kgCoefficient: value }, { merge: true });
+    }
+  }
+
+  const handleTemplateChange = (newTemplate: string) => {
+    setReportTemplate(newTemplate);
+    if (user && firestore) {
+      const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
+      setDocumentNonBlocking(settingsDocRef, { reportTemplate: newTemplate }, { merge: true });
     }
   }
 
@@ -465,7 +498,12 @@ export default function HomePage() {
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-4xl">
-                       <TextReportDialog generators={generators} kgCoefficient={kgCoefficient} />
+                       <TextReportDialog 
+                          generators={generators} 
+                          kgCoefficient={kgCoefficient}
+                          template={reportTemplate}
+                          onTemplateChange={handleTemplateChange}
+                        />
                     </DialogContent>
                 </Dialog>
             </div>

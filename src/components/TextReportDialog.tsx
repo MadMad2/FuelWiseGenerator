@@ -21,14 +21,14 @@ import {
 import { FileSignature, Copy, Droplets, Weight, Info, Pencil, CalendarDays } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useUser } from '@/firebase';
 
 
 interface TextReportDialogProps {
     generators: GeneratorState[];
     kgCoefficient: number;
+    template: string;
+    onTemplateChange: (template: string) => void;
 }
 
 type ValueKey = 'initialFuel' | 'totalConsumption' | 'remainingFuel' | 'scheduledConsumption' | 'readinessConsumption' | 'relocation' | 'maintenance' | 'componentReplacement';
@@ -48,35 +48,23 @@ const DYNAMIC_VALUES: DynamicValue[] = [
     { key: 'componentReplacement', label: 'Витрата на АМКП' },
 ];
 
-const DEFAULT_TEMPLATE = `Звіт по агрегатам:\n\nАгрегат: {{gen.Дизельний_агрегат_1.name}}\nЗалишок: {{gen.Дизельний_агрегат_1.remainingFuel.liters}} л\n\nАгрегат: {{gen.Дизельний_агрегат_2.name}}\nЗалишок: {{gen.Дизельний_агрегат_2.remainingFuel.liters}} л`;
 
 const sanitizeNameForPlaceholder = (name: string) => {
   return name.replace(/[^a-zA-Z0-9]/g, '_');
 };
 
-export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialogProps) => {
+export const TextReportDialog = ({ generators, kgCoefficient, template, onTemplateChange }: TextReportDialogProps) => {
     const { user } = useUser();
-    const firestore = useFirestore();
-    const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
     
     const { toast } = useToast();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedGeneratorId, setSelectedGeneratorId] = useState<string | undefined>(generators[0]?.id.toString());
     const [isEditing, setIsEditing] = useState(false);
-
+    const [currentTemplate, setCurrentTemplate] = useState(template);
+    
     useEffect(() => {
-        if (!user || !firestore) return;
-        const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
-        const unsubscribe = onSnapshot(settingsDocRef, (doc) => {
-            if (doc.exists()) {
-                const settings = doc.data();
-                if (settings.reportTemplate) {
-                    setTemplate(settings.reportTemplate);
-                }
-            }
-        });
-        return () => unsubscribe();
-    }, [user, firestore]);
+        setCurrentTemplate(template);
+    }, [template]);
 
     const calculations = useMemo(() => {
         const calcs = new Map<string, any>();
@@ -129,15 +117,15 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
         const text = textarea.value;
         const newText = text.substring(0, start) + placeholder + text.substring(end);
         
-        setTemplate(newText);
+        setCurrentTemplate(newText);
         textarea.focus();
         setTimeout(() => {
             textarea.selectionStart = textarea.selectionEnd = start + placeholder.length;
         }, 0);
     };
 
-    const generateReport = () => {
-        let report = template;
+    const generateReport = (tpl: string) => {
+        let report = tpl;
 
         const today = new Date();
         const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
@@ -164,13 +152,8 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
     };
     
     const handleSaveTemplate = () => {
-        if (!user || !firestore) {
-            toast({ variant: 'destructive', title: "Помилка", description: "Ви повинні увійти, щоб зберегти шаблон." });
-            return;
-        }
-        const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
-        setDocumentNonBlocking(settingsDocRef, { reportTemplate: template }, { merge: true });
-        toast({ title: "Шаблон збережено!", description: "Ваш шаблон звіту було збережено в хмарі." });
+        onTemplateChange(currentTemplate);
+        toast({ title: user ? "Шаблон збережено в хмарі!" : "Шаблон збережено локально!" });
         setIsEditing(false);
     };
 
@@ -180,7 +163,8 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
         });
     };
     
-    const finalReport = useMemo(generateReport, [template, calculations]);
+    const finalReport = useMemo(() => generateReport(template), [template, calculations]);
+    const previewReport = useMemo(() => generateReport(currentTemplate), [currentTemplate, calculations]);
 
     const selectedGenerator = selectedGeneratorId ? generators.find(g => g.id.toString() === selectedGeneratorId) : undefined;
     const selectedGeneratorSanitizedName = selectedGenerator ? sanitizeNameForPlaceholder(selectedGenerator.name) : '';
@@ -218,8 +202,8 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
                         </div>
                         <Textarea 
                             ref={textareaRef}
-                            value={template}
-                            onChange={e => setTemplate(e.target.value)}
+                            value={currentTemplate}
+                            onChange={e => setCurrentTemplate(e.target.value)}
                             rows={10}
                             placeholder="Введіть текст вашого звіту тут..."
                             className="text-sm"
@@ -278,7 +262,7 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
                         <h3 className="font-semibold">Результат (попередній перегляд)</h3>
                         <ScrollArea className="h-[calc(70vh-8rem)] rounded-md border bg-muted/50 p-4">
                             <pre className="text-sm whitespace-pre-wrap font-sans">
-                                {finalReport || <span className="text-muted-foreground">Згенерований звіт з'явиться тут.</span>}
+                                {previewReport || <span className="text-muted-foreground">Згенерований звіт з'явиться тут.</span>}
                             </pre>
                         </ScrollArea>
                     </div>
@@ -300,7 +284,7 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
             </DialogHeader>
             <div className='flex flex-col gap-4 mt-4'>
                 <div className="flex justify-end items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                    <Button variant="outline" size="sm" onClick={() => { setIsEditing(true); setCurrentTemplate(template); }}>
                         <Pencil className="mr-2 size-4"/>
                         Редагувати шаблон
                     </Button>

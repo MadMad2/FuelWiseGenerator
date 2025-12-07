@@ -47,7 +47,7 @@ export function AuthDialog() {
         toast({
           variant: "destructive",
           title: "Помилка входу",
-          description: "Не вдалося увійти. Перевірте ваші дані.",
+          description: error.message || "Не вдалося увійти. Перевірте ваші дані.",
         });
       })
       .finally(() => {
@@ -65,7 +65,7 @@ export function AuthDialog() {
         toast({
           variant: "destructive",
           title: "Помилка реєстрації",
-          description: "Акаунт з такою поштою вже існує або пароль занадто короткий.",
+          description: error.message || "Акаунт з такою поштою вже існує або пароль занадто короткий.",
         });
       })
       .finally(() => {
@@ -82,7 +82,7 @@ export function AuthDialog() {
         toast({
           variant: "destructive",
           title: "Помилка входу через Google",
-          description: "Не вдалося увійти. Спробуйте інший спосіб.",
+          description: error.message || "Не вдалося увійти. Спробуйте інший спосіб.",
         });
       })
       .finally(() => {

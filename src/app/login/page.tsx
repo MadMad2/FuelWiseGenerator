@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
-import { Fuel } from 'lucide-react';
+import { Fuel, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function SignupPage() {
+export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,40 +26,40 @@ export default function SignupPage() {
     }
   }, [user, isUserLoading, router]);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setLoading(true);
-    // This is non-blocking. The onAuthStateChanged listener will handle the redirect.
-    initiateEmailSignUp(auth, email, password)
-     .catch((error: any) => {
-        console.error("Sign up error", error);
+    // Non-blocking call
+    initiateEmailSignIn(auth, email, password)
+      .catch((error: any) => {
+        console.error("Sign in error", error);
         toast({
           variant: "destructive",
-          title: "Помилка реєстрації",
-          description: "Акаунт з такою поштою вже існує або пароль занадто короткий.",
+          title: "Помилка входу",
+          description: "Не вдалося увійти. Перевірте ваші дані.",
         });
       })
       .finally(() => {
         setLoading(false);
       });
   };
-
+  
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
-        <div className="absolute top-6 left-6 flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
+       <div className="absolute top-6 left-6 flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
             <Fuel className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">Калькулятор палива</h1>
         </div>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Реєстрація</CardTitle>
+          <CardTitle className="text-2xl">Вхід</CardTitle>
           <CardDescription>
-            Створіть новий обліковий запис, щоб зберігати ваші дані.
+            Введіть ваші дані для входу в обліковий запис.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp} className="grid gap-4">
+          <form onSubmit={handleSignIn} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -73,7 +73,7 @@ export default function SignupPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Пароль (мін. 6 символів)</Label>
+              <Label htmlFor="password">Пароль</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -84,10 +84,10 @@ export default function SignupPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Створення...' : 'Створити акаунт'}
+              {loading ? 'Вхід...' : 'Увійти'}
             </Button>
-            <Button variant="outline" className="w-full" type="button" onClick={() => router.push('/login')}>
-              Вже є акаунт? Увійти
+             <Button variant="outline" className="w-full" type="button" onClick={() => router.push('/signup')}>
+              Немає акаунту? Зареєструватися
             </Button>
           </form>
         </CardContent>

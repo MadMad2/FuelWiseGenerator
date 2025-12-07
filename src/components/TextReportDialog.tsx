@@ -22,7 +22,7 @@ import { FileSignature, Copy, Droplets, Weight, Info, Pencil, CalendarDays } fro
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 import { useUser, useFirestore } from '@/firebase';
-import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 

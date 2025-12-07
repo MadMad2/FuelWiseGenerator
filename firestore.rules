@@ -110,6 +110,20 @@ service cloud.firestore {
       allow delete: if false;
 
       /**
+       * @description Secures a user's collection of settings documents.
+       * @path        /users/{userId}/settings/{settingId}
+       * @allow       (create, get, list, update, delete) A user managing their own settings.
+       * @principle   Enforces strict document ownership for user-specific settings.
+       */
+      match /settings/{settingId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
        * @description Secures a user's collection of generator units.
        * @path        /users/{userId}/generatorUnits/{generatorUnitId}
        * @allow       (create, get, list, update, delete) A user managing their own generator unit.

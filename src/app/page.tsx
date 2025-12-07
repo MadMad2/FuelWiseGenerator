@@ -25,6 +25,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { TimeCalculatorDialog } from '@/components/TimeCalculatorDialog';
 import { TextReportDialog } from '@/components/TextReportDialog';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
@@ -162,6 +163,7 @@ export default function Home() {
             <Fuel className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">Калькулятор палива</h1>
           </div>
+          <ThemeSwitcher />
         </div>
       </header>
 

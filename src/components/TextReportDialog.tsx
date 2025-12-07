@@ -164,7 +164,10 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
     };
     
     const handleSaveTemplate = () => {
-        if (!user || !firestore) return;
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: "Помилка", description: "Ви повинні увійти, щоб зберегти шаблон." });
+            return;
+        }
         const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
         setDocumentNonBlocking(settingsDocRef, { reportTemplate: template }, { merge: true });
         toast({ title: "Шаблон збережено!", description: "Ваш шаблон звіту було збережено в хмарі." });

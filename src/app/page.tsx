@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil, Calculator } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil, Calculator, FileSignature } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/accordion";
 import { Separator } from '@/components/ui/separator';
 import { TimeCalculatorDialog } from '@/components/TimeCalculatorDialog';
+import { TextReportDialog } from '@/components/TextReportDialog';
 
 const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
@@ -180,7 +181,7 @@ export default function Home() {
                 />
                 <p className="text-xs text-muted-foreground">Цей коефіцієнт буде застосовано до всіх значень в літрах для розрахунку ваги.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 self-start md:self-center">
+            <div className="flex flex-col sm:flex-row gap-2 self-start md:self-center flex-wrap justify-end">
                 <Button onClick={addGenerator}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Додати агрегат
                 </Button>
@@ -246,7 +247,7 @@ export default function Home() {
                                                       {gen.additionalExpenses.filter(e => e.name.trim()).length > 0 && <Separator className="my-2"/>}
 
                                                       {gen.additionalExpenses.filter(e => e.name.trim()).map(exp => (
-                                                         <div key={exp.id} className="flex justify-between items-baseline"><div className='flex items-center gap-2 truncate'><Package className="size-4 text-muted-foreground" />{exp.name}:</div> <span className='font-mono flex items-baseline whitespace-nowrap'>{(exp.value || 0).toFixed(2)} л <KgDisplay value={exp.value || 0} coefficient={kgCoefficient} /></span></div>
+                                                         <div key={exp.id} className="flex justify-between items-baseline"><div className='flex items-center gap-2 truncate'><Pencil className="size-4 text-muted-foreground" />{exp.name}:</div> <span className='font-mono flex items-baseline whitespace-nowrap'>{(exp.value || 0).toFixed(2)} л <KgDisplay value={exp.value || 0} coefficient={kgCoefficient} /></span></div>
                                                       ))}
                                                   </div>
                                               </div>
@@ -268,6 +269,16 @@ export default function Home() {
                     </DialogTrigger>
                     <DialogContent className="max-w-md">
                         <TimeCalculatorDialog />
+                    </DialogContent>
+                </Dialog>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" disabled={generators.length === 0}>
+                            <FileSignature className="mr-2 h-4 w-4" /> Текстовий звіт
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                       <TextReportDialog generators={generators} kgCoefficient={kgCoefficient} />
                     </DialogContent>
                 </Dialog>
             </div>

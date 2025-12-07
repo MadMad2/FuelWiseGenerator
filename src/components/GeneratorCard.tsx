@@ -149,11 +149,11 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
                     setIsEditingName(false);
                   }
                 }}
-                className="text-2xl font-semibold leading-none tracking-tight border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto truncate"
+                className="text-2xl font-semibold leading-none tracking-tight border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto"
               />
             ) : (
               <>
-                <h2 className="text-2xl font-semibold leading-none tracking-tight truncate flex-grow">{generator.name}</h2>
+                <h2 className="text-2xl font-semibold leading-none tracking-tight truncate flex-grow cursor-pointer" onClick={() => setIsEditingName(true)}>{generator.name}</h2>
                 <Button variant="ghost" size="icon" className="text-muted-foreground/50 hover:text-primary flex-shrink-0 h-auto w-auto p-0" onClick={() => setIsEditingName(true)}>
                   <Pencil className="size-4" />
                 </Button>
@@ -273,9 +273,9 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
           <div className="flex items-center gap-2 text-muted-foreground"><Package className="size-4" /> АМКП:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{componentReplacementConsumption.toFixed(2)} л <KgDisplay value={componentReplacementConsumption} coefficient={kgCoefficient} /></div>
 
-          {generator.additionalExpenses.map(exp => (
+          {generator.additionalExpenses.filter(e => e.name.trim()).map(exp => (
              <React.Fragment key={exp.id}>
-                <div className="flex items-center gap-2 text-muted-foreground truncate"><Package className="size-4" /> {exp.name}:</div>
+                <div className="flex items-center gap-2 text-muted-foreground truncate"><Pencil className="size-4" /> {exp.name}:</div>
                 <div className="text-right font-mono flex items-baseline justify-end">{(exp.value || 0).toFixed(2)} л <KgDisplay value={exp.value || 0} coefficient={kgCoefficient} /></div>
              </React.Fragment>
           ))}

@@ -47,6 +47,28 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224 66% 45%;
   }
+
+  .military {
+    --background: 75 10% 12%; /* Dark khaki */
+    --foreground: 80 15% 85%; /* Light gray-green text */
+    --card: 75 10% 15%; /* Slightly lighter khaki for cards */
+    --card-foreground: 80 15% 85%;
+    --popover: 75 10% 15%;
+    --popover-foreground: 80 15% 85%;
+    --primary: 90 30% 40%; /* Muted olive green */
+    --primary-foreground: 90 10% 95%;
+    --secondary: 80 15% 25%; /* Darker olive */
+    --secondary-foreground: 90 10% 95%;
+    --muted: 80 15% 25%;
+    --muted-foreground: 80 10% 60%;
+    --accent: 40 40% 50%; /* Sand/tan accent */
+    --accent-foreground: 40 10% 10%;
+    --destructive: 0 60% 45%; /* A slightly more muted red */
+    --destructive-foreground: 0 0% 100%;
+    --border: 80 10% 25%;
+    --input: 80 10% 25%;
+    --ring: 90 30% 45%;
+  }
 }
 
 @layer base {

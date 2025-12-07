@@ -8,7 +8,34 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Fuel, Cog, Clock, Zap, Package, Trash2, PlusCircle, Truck, Wrench, Pencil } from "lucide-react";
+import { Fuel, Clock, Zap, Package, Trash2, PlusCircle, Truck, Pencil, Power } from "lucide-react";
+
+// Inline SVG for the rifle icon
+const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 4h3v4" />
+    <path d="M17.5 11.5 22 7" />
+    <path d="M15 9h.01" />
+    <path d="m3 21 6-6" />
+    <path d="m6 18 3.5-3.5" />
+    <path d="m4 16 6-6" />
+    <path d="M13.5 6.5 19 1" />
+    <path d="m17 8 3-3" />
+    <path d="M7.5 13.5 10 11" />
+  </svg>
+);
+
 
 export interface AdditionalExpense {
   id: number;
@@ -137,7 +164,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
       <CardHeader>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 flex-grow min-w-0">
-            <Cog className="text-primary flex-shrink-0" />
+            <Power className="text-primary flex-shrink-0" />
             {isEditingName ? (
               <Input
                 ref={nameInputRef}
@@ -196,7 +223,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
             <Input id={`relocation-${generator.id}`} type="number" value={generator.relocation || ''} onChange={(e) => handleInputChange('relocation', e.target.value)} placeholder="напр., 50"/>
         </div>
         <div className="space-y-2">
-            <Label htmlFor={`maintenance-${generator.id}`} className="flex items-center gap-2"><Wrench className="size-4 text-muted-foreground"/>МВГ (л)</Label>
+            <Label htmlFor={`maintenance-${generator.id}`} className="flex items-center gap-2"><RifleIcon className="size-4 text-muted-foreground"/>МВГ (л)</Label>
             <Input id={`maintenance-${generator.id}`} type="number" value={generator.maintenance || ''} onChange={(e) => handleInputChange('maintenance', e.target.value)} placeholder="напр., 10"/>
         </div>
         <div className="space-y-2 col-span-1 md:col-span-2">
@@ -267,7 +294,7 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
           <div className="flex items-center gap-2 text-muted-foreground"><Truck className="size-4" /> Переїзд:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{relocationConsumption.toFixed(2)} л <KgDisplay value={relocationConsumption} coefficient={kgCoefficient} /></div>
           
-          <div className="flex items-center gap-2 text-muted-foreground"><Wrench className="size-4" /> МВГ:</div>
+          <div className="flex items-center gap-2 text-muted-foreground"><RifleIcon className="size-4" /> МВГ:</div>
           <div className="text-right font-mono flex items-baseline justify-end">{maintenanceConsumption.toFixed(2)} л <KgDisplay value={maintenanceConsumption} coefficient={kgCoefficient} /></div>
           
           <div className="flex items-center gap-2 text-muted-foreground"><Package className="size-4" /> АМКП:</div>

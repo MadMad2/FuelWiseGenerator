@@ -31,6 +31,9 @@ export function ThemeSwitcher() {
         <DropdownMenuItem onClick={() => setTheme("dark")}>
           Темна
         </DropdownMenuItem>
+         <DropdownMenuItem onClick={() => setTheme("military")}>
+          Військова
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme("system")}>
           Системна
         </DropdownMenuItem>

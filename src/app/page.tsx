@@ -7,7 +7,7 @@ import { useUser, useAuth, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, doc, setDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Wrench, Package, Pencil, Calculator, FileSignature, LogIn, UserPlus } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, FileText, Clock, Zap, Truck, Package, Pencil, Calculator, FileSignature, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,32 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { AuthDialog } from '@/components/AuthDialog';
+
+// Inline SVG for the rifle icon
+const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 4h3v4" />
+    <path d="M17.5 11.5 22 7" />
+    <path d="M15 9h.01" />
+    <path d="m3 21 6-6" />
+    <path d="m6 18 3.5-3.5" />
+    <path d="m4 16 6-6" />
+    <path d="M13.5 6.5 19 1" />
+    <path d="m17 8 3-3" />
+    <path d="M7.5 13.5 10 11" />
+  </svg>
+);
 
 const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v3';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v2';
@@ -402,7 +428,7 @@ export default function HomePage() {
                                                       <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Clock className="size-4 text-muted-foreground" />По графіку:</div> <span className='font-mono flex items-baseline'>{scheduledConsumption.toFixed(2)} л <KgDisplay value={scheduledConsumption} coefficient={kgCoefficient} /></span></div>
                                                       <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Zap className="size-4 text-muted-foreground" />По готовності:</div> <span className='font-mono flex items-baseline'>{readinessConsumption.toFixed(2)} л <KgDisplay value={readinessConsumption} coefficient={kgCoefficient} /></span></div>
                                                       <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Truck className="size-4 text-muted-foreground" />Переїзд:</div> <span className='font-mono flex items-baseline'>{relocationConsumption.toFixed(2)} л <KgDisplay value={relocationConsumption} coefficient={kgCoefficient} /></span></div>
-                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Wrench className="size-4 text-muted-foreground" />МВГ:</div> <span className='font-mono flex items-baseline'>{maintenanceConsumption.toFixed(2)} л <KgDisplay value={maintenanceConsumption} coefficient={kgCoefficient} /></span></div>
+                                                      <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><RifleIcon className="size-4 text-muted-foreground" />МВГ:</div> <span className='font-mono flex items-baseline'>{maintenanceConsumption.toFixed(2)} л <KgDisplay value={maintenanceConsumption} coefficient={kgCoefficient} /></span></div>
                                                       <div className="flex justify-between items-baseline"><div className='flex items-center gap-2'><Package className="size-4 text-muted-foreground" />АМКП:</div> <span className='font-mono flex items-baseline'>{componentReplacementConsumption.toFixed(2)} л <KgDisplay value={componentReplacementConsumption} coefficient={kgCoefficient} /></span></div>
                                                       
                                                       {gen.additionalExpenses.filter(e => e.name.trim()).length > 0 && <Separator className="my-2"/>}

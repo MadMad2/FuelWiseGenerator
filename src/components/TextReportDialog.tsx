@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileSignature, Copy, Droplets, Weight, Info, Pencil } from 'lucide-react';
+import { FileSignature, Copy, Droplets, Weight, Info, Pencil, CalendarDate } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 
@@ -123,6 +123,10 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
 
     const generateReport = () => {
         let report = template;
+
+        const today = new Date();
+        const formattedDate = `${String(today.getDate()).padStart(2, '0')}.${String(today.getMonth() + 1).padStart(2, '0')}.${today.getFullYear()}`;
+        report = report.replace(/{{date}}/g, formattedDate);
         
         calculations.forEach((genData) => {
             const genNamePlaceholder = genData.sanitizedName;
@@ -202,6 +206,9 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
                         />
                         <div className='space-y-3 p-3 border rounded-lg'>
                             <h4 className='text-sm font-medium'>Додавання даних до шаблону</h4>
+                             <div className="flex flex-wrap gap-2 p-1">
+                                <Badge variant="secondary" onClick={() => handleInsertPlaceholder(`{{date}}`)} className="cursor-pointer flex items-center gap-1.5"><CalendarDate className="size-3" />Дата</Badge>
+                             </div>
                              <Select onValueChange={setSelectedGeneratorId} value={selectedGeneratorId}>
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Оберіть агрегат для вставки даних" />

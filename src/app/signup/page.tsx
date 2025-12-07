@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/firebase';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
 import { Fuel } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,39 +19,39 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
     setLoading(true);
     try {
-      // We are not awaiting this. The onAuthStateChanged listener in FirebaseProvider will handle the redirect.
-      initiateEmailSignIn(auth, email, password);
+      // This is non-blocking. The onAuthStateChanged listener will handle the redirect.
+      initiateEmailSignUp(auth, email, password);
     } catch (error: any) {
-      console.error("Sign in error", error);
+      console.error("Sign up error", error);
       toast({
         variant: "destructive",
-        title: "Помилка входу",
-        description: error.message || "Не вдалося увійти. Перевірте ваші дані.",
+        title: "Помилка реєстрації",
+        description: error.message || "Не вдалося створити акаунт.",
       });
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center items-center p-4">
-       <div className="absolute top-6 left-6 flex items-center gap-3">
+        <div className="absolute top-6 left-6 flex items-center gap-3">
             <Fuel className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">Калькулятор палива</h1>
         </div>
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">Вхід</CardTitle>
+          <CardTitle className="text-2xl">Реєстрація</CardTitle>
           <CardDescription>
-            Введіть ваші дані для входу в обліковий запис.
+            Створіть новий обліковий запис, щоб зберігати ваші дані.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn} className="grid gap-4">
+          <form onSubmit={handleSignUp} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -76,10 +76,10 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Вхід...' : 'Увійти'}
+              {loading ? 'Створення...' : 'Створити акаунт'}
             </Button>
-             <Button variant="outline" className="w-full" type="button" onClick={() => router.push('/signup')}>
-              Створити акаунт
+            <Button variant="outline" className="w-full" type="button" onClick={() => router.push('/')}>
+              Вже є акаунт? Увійти
             </Button>
           </form>
         </CardContent>

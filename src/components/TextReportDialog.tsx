@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import type { GeneratorState } from '@/components/GeneratorCard';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,10 @@ import {
 import { FileSignature, Copy, Droplets, Weight, Info, Pencil, CalendarDays } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
+import { useUser, useFirestore } from '@/firebase';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+
 
 interface TextReportDialogProps {
     generators: GeneratorState[];
@@ -44,24 +48,35 @@ const DYNAMIC_VALUES: DynamicValue[] = [
     { key: 'componentReplacement', label: 'Витрата на АМКП' },
 ];
 
-const STORAGE_KEY_TEMPLATE = 'fuelwise_report_template_v2';
+const DEFAULT_TEMPLATE = `Звіт по агрегатам:\n\nАгрегат: {{gen.Дизельний_агрегат_1.name}}\nЗалишок: {{gen.Дизельний_агрегат_1.remainingFuel.liters}} л\n\nАгрегат: {{gen.Дизельний_агрегат_2.name}}\nЗалишок: {{gen.Дизельний_агрегат_2.remainingFuel.liters}} л`;
 
 const sanitizeNameForPlaceholder = (name: string) => {
   return name.replace(/[^a-zA-Z0-9]/g, '_');
 };
 
 export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialogProps) => {
-    const [template, setTemplate] = useState<string>(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem(STORAGE_KEY_TEMPLATE) || `Звіт по агрегатам:\n\nАгрегат: {{gen.Дизельний_агрегат_1.name}}\nЗалишок: {{gen.Дизельний_агрегат_1.remainingFuel.liters}} л\n\nАгрегат: {{gen.Дизельний_агрегат_2.name}}\nЗалишок: {{gen.Дизельний_агрегат_2.remainingFuel.liters}} л`;
-        }
-        return '';
-    });
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const [template, setTemplate] = useState<string>(DEFAULT_TEMPLATE);
     
     const { toast } = useToast();
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [selectedGeneratorId, setSelectedGeneratorId] = useState<string | undefined>(generators[0]?.id.toString());
     const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+        if (!user || !firestore) return;
+        const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
+        const unsubscribe = onSnapshot(settingsDocRef, (doc) => {
+            if (doc.exists()) {
+                const settings = doc.data();
+                if (settings.reportTemplate) {
+                    setTemplate(settings.reportTemplate);
+                }
+            }
+        });
+        return () => unsubscribe();
+    }, [user, firestore]);
 
     const calculations = useMemo(() => {
         const calcs = new Map<string, any>();
@@ -149,8 +164,10 @@ export const TextReportDialog = ({ generators, kgCoefficient }: TextReportDialog
     };
     
     const handleSaveTemplate = () => {
-        localStorage.setItem(STORAGE_KEY_TEMPLATE, template);
-        toast({ title: "Шаблон збережено!", description: "Ваш шаблон звіту було збережено в локальному сховищі." });
+        if (!user || !firestore) return;
+        const settingsDocRef = doc(firestore, 'users', user.uid, 'settings', 'main');
+        setDocumentNonBlocking(settingsDocRef, { reportTemplate: template }, { merge: true });
+        toast({ title: "Шаблон збережено!", description: "Ваш шаблон звіту було збережено в хмарі." });
         setIsEditing(false);
     };
 

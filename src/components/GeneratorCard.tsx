@@ -17,7 +17,7 @@ export interface AdditionalExpense {
 }
 
 export interface GeneratorState {
-  id: number;
+  id: number | string;
   name: string;
   fuelRate: number;
   initialFuel: number;
@@ -40,7 +40,7 @@ export type GeneratorAction =
 interface GeneratorCardProps {
   generator: GeneratorState;
   onUpdate: (action: GeneratorAction) => void;
-  onRemove: (id: number) => void;
+  onRemove: (id: number | string) => void;
   kgCoefficient: number;
 }
 

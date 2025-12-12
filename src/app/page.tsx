@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, Github, Calculator } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, Calculator } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -132,9 +132,6 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             <ThemeSwitcher />
-            <a href="https://github.com/firebase/genkit/tree/main/studio" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
-              <Github className="h-6 w-6" />
-            </a>
           </div>
         </div>
       </header>

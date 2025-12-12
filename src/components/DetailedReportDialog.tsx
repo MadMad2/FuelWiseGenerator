@@ -95,16 +95,16 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                         <AccordionContent className="text-sm">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 px-4 py-2 bg-muted/50 rounded-md">
 
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-sm sm:text-base font-semibold">
                                     <div className="flex items-center gap-2"><Inbox className="size-4" />Початкове паливо:</div>
                                     <span className="font-mono flex items-baseline">{(gen.initialFuel || 0).toFixed(2)} л <KgDisplay value={gen.initialFuel || 0} coefficient={kgCoefficient} /></span>
                                 </div>
 
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-sm sm:text-base font-semibold">
                                     <div className="flex items-center gap-2 text-accent"><Fuel className="size-4" /> Всього використано:</div>
                                     <div className="font-mono font-semibold flex items-baseline">{consumptions.total.toFixed(2)} л <KgDisplay value={consumptions.total} coefficient={kgCoefficient} /></div>
                                 </div>
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-sm sm:text-base font-semibold">
                                     <div className={`flex items-center gap-2 ${hasEnoughFuel ? 'text-primary' : 'text-destructive'}`}>
                                         {hasEnoughFuel ? <CheckCircle className="size-4"/> : <XCircle className="size-4"/>}
                                         Залишок палива:

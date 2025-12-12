@@ -73,7 +73,7 @@ interface GeneratorCardProps {
 
 const KgDisplay: FC<{ value: number, coefficient: number }> = ({ value, coefficient }) => {
   if (coefficient <= 0 || !isFinite(value) || value === 0) return null;
-  return <span className="text-xs text-muted-foreground ml-2">({(value * coefficient).toFixed(2)} кг)</span>;
+  return <span className="text-xs text-destructive ml-2">({(value * coefficient).toFixed(2)} кг)</span>;
 };
 
 const TimeInput: FC<{

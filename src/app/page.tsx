@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, Calculator } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, Calculator, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { TimeCalculatorDialog } from '@/components/TimeCalculatorDialog';
-import { TotalReportCard } from '@/components/TotalReportCard';
+import { DetailedReportDialog } from '@/components/DetailedReportDialog';
 
 const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v6';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v2';
@@ -119,39 +119,6 @@ export default function HomePage() {
     setKgCoefficient(value);
   }
 
-  const totalReportData = useMemo(() => {
-    return generators.reduce((acc, gen) => {
-        const scheduled = (gen.scheduledHours || 0) * (gen.fuelRate || 0);
-        const readiness = (gen.readinessHours || 0) * (gen.fuelRate || 0);
-        const relocation = gen.relocation || 0;
-        const maintenance = gen.maintenance || 0;
-        const componentReplacement = gen.componentReplacement || 0;
-        const additional = (gen.additionalExpenses || []).reduce((sum, exp) => sum + (exp.value || 0), 0);
-        
-        const totalConsumption = scheduled + readiness + relocation + maintenance + componentReplacement + additional;
-        
-        acc.initialFuel += gen.initialFuel || 0;
-        acc.scheduledConsumption += scheduled;
-        acc.readinessConsumption += readiness;
-        acc.relocationConsumption += relocation;
-        acc.maintenanceConsumption += maintenance;
-        acc.componentReplacementConsumption += componentReplacement;
-        acc.additionalConsumption += additional;
-        acc.totalConsumption += totalConsumption;
-
-        return acc;
-    }, {
-        initialFuel: 0,
-        scheduledConsumption: 0,
-        readinessConsumption: 0,
-        relocationConsumption: 0,
-        maintenanceConsumption: 0,
-        componentReplacementConsumption: 0,
-        additionalConsumption: 0,
-        totalConsumption: 0,
-    });
-  }, [generators]);
-  
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center">Завантаження...</div>;
   }
@@ -190,6 +157,16 @@ export default function HomePage() {
                 <Button onClick={addGenerator}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Додати агрегат
                 </Button>
+                 <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <BarChart3 className="mr-2 h-4 w-4" /> Детальний звіт
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl">
+                        <DetailedReportDialog generators={generators} kgCoefficient={kgCoefficient} />
+                    </DialogContent>
+                </Dialog>
                 <Dialog>
                     <DialogTrigger asChild>
                         <Button variant="outline">
@@ -202,12 +179,6 @@ export default function HomePage() {
                 </Dialog>
             </div>
         </div>
-
-        {generators.length > 0 && (
-            <div className="mb-8">
-                <TotalReportCard data={totalReportData} kgCoefficient={kgCoefficient} />
-            </div>
-        )}
       
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
           {generators.map(gen => (

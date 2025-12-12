@@ -26,6 +26,16 @@ const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 3, name: 'Дизельний агрегат 3', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
 ];
 
+const getEmptyGeneratorState = (): Omit<GeneratorState, 'id' | 'name' | 'fuelRate'> => ({
+    initialFuel: 0,
+    scheduledHours: 0,
+    readinessHours: 0,
+    relocation: 0,
+    maintenance: 0,
+    componentReplacement: 0,
+    additionalExpenses: [],
+});
+
 export default function HomePage() {
   const [generators, setGenerators] = useState<GeneratorState[]>([]);
   const [kgCoefficient, setKgCoefficient] = useState<number>(0.85);
@@ -37,7 +47,16 @@ export default function HomePage() {
       const savedGenerators = localStorage.getItem(STORAGE_KEY_GENERATORS);
       const savedCoefficient = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
       
-      setGenerators(savedGenerators ? JSON.parse(savedGenerators) : initialGenerators);
+      if (savedGenerators) {
+        const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate'>[] = JSON.parse(savedGenerators);
+        setGenerators(parsedGenerators.map(g => ({
+          ...g,
+          ...getEmptyGeneratorState(),
+        })));
+      } else {
+        setGenerators(initialGenerators);
+      }
+      
       if (savedCoefficient) {
         setKgCoefficient(parseFloat(savedCoefficient));
       }
@@ -52,7 +71,8 @@ export default function HomePage() {
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(generators));
+        const dataToSave = generators.map(({ id, name, fuelRate }) => ({ id, name, fuelRate }));
+        localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(dataToSave));
         localStorage.setItem(STORAGE_KEY_COEFFICIENT, kgCoefficient.toString());
       } catch (error) {
         console.error("Could not write to localStorage:", error);

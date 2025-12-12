@@ -38,34 +38,6 @@ const calculateConsumption = (gen: GeneratorState) => {
 
 export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators, kgCoefficient }) => {
 
-  const totalReport = useMemo(() => {
-    return generators.reduce((acc, gen) => {
-        const consumptions = calculateConsumption(gen);
-        
-        acc.initialFuel += gen.initialFuel || 0;
-        acc.scheduledConsumption += consumptions.scheduled;
-        acc.readinessConsumption += consumptions.readiness;
-        acc.relocationConsumption += consumptions.relocation;
-        acc.maintenanceConsumption += consumptions.maintenance;
-        acc.componentReplacementConsumption += consumptions.componentReplacement;
-        acc.additionalConsumption += consumptions.additional;
-        acc.totalConsumption += consumptions.total;
-        acc.totalRemaining += consumptions.remaining;
-
-        return acc;
-    }, {
-        initialFuel: 0,
-        scheduledConsumption: 0,
-        readinessConsumption: 0,
-        relocationConsumption: 0,
-        maintenanceConsumption: 0,
-        componentReplacementConsumption: 0,
-        additionalConsumption: 0,
-        totalConsumption: 0,
-        totalRemaining: 0,
-    });
-  }, [generators]);
-
   return (
     <>
       <DialogHeader>
@@ -74,21 +46,30 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
           Детальний звіт
         </DialogTitle>
         <DialogDescription>
-          Розгорнутий звіт по кожному агрегату та загальний підсумок.
+          Розгорнутий звіт по кожному агрегату.
         </DialogDescription>
       </DialogHeader>
       <div className="py-4 space-y-4 max-h-[70vh] overflow-y-auto -mr-6 pr-6">
         <Accordion type="multiple" className="w-full">
             {generators.map(gen => {
                 const consumptions = calculateConsumption(gen);
+                const hasEnoughFuel = consumptions.remaining >= 0;
+
                 return (
                     <AccordionItem value={String(gen.id)} key={gen.id}>
-                        <AccordionTrigger>
-                            <div className="flex justify-between items-center w-full pr-4">
+                        <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md transition-colors -mx-4">
+                            <div className="flex justify-between items-center w-full pr-2">
                                 <span className="font-semibold text-base truncate flex-1 text-left">{gen.name}</span>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span>Використано:</span>
-                                    <span className="font-mono">{consumptions.total.toFixed(2)} л</span>
+                                <div className="flex items-center gap-3 text-sm">
+                                    {hasEnoughFuel ? (
+                                        <CheckCircle className="size-5 text-green-500" />
+                                    ) : (
+                                        <XCircle className="size-5 text-destructive" />
+                                    )}
+                                    <div className="text-right">
+                                        <span className="text-muted-foreground">Залишок:</span>
+                                        <span className={`font-mono ml-2 ${hasEnoughFuel ? '' : 'text-destructive'}`}>{consumptions.remaining.toFixed(2)} л</span>
+                                    </div>
                                 </div>
                             </div>
                         </AccordionTrigger>
@@ -117,10 +98,10 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                                 <div className="text-right font-mono flex items-baseline justify-end">{consumptions.componentReplacement.toFixed(2)} л <KgDisplay value={consumptions.componentReplacement} coefficient={kgCoefficient} /></div>
 
                                 {gen.additionalExpenses.filter(e => e.name.trim()).map(exp => (
-                                    <>
+                                    <React.Fragment key={exp.id}>
                                         <div className="flex items-center gap-2 text-muted-foreground truncate"><Pencil className="size-4" /> {exp.name}:</div>
                                         <div className="text-right font-mono flex items-baseline justify-end">{(exp.value || 0).toFixed(2)} л <KgDisplay value={exp.value || 0} coefficient={kgCoefficient} /></div>
-                                    </>
+                                    </React.Fragment>
                                 ))}
 
                                 <Separator className="my-1 sm:col-span-2" />
@@ -147,27 +128,6 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
             <p className="text-muted-foreground text-center py-8">Немає агрегатів для відображення звіту.</p>
         )}
       </div>
-      {generators.length > 0 && (
-        <>
-            <Separator />
-            <div className="pt-4 mt-2 space-y-3">
-                <h3 className="font-semibold text-lg text-center mb-2">Загальний підсумок</h3>
-                <div className="p-4 bg-muted rounded-lg space-y-2 text-sm">
-                    <div className="flex justify-between items-baseline font-medium"><span>Початкове паливо (всього):</span> <span className="font-mono flex items-baseline">{totalReport.initialFuel.toFixed(2)} л <KgDisplay value={totalReport.initialFuel} coefficient={kgCoefficient} /></span></div>
-                    <Separator/>
-                    <div className="flex justify-between items-baseline"><span>По графіку:</span> <span className="font-mono flex items-baseline">{totalReport.scheduledConsumption.toFixed(2)} л</span></div>
-                    <div className="flex justify-between items-baseline"><span>По готовності:</span> <span className="font-mono flex items-baseline">{totalReport.readinessConsumption.toFixed(2)} л</span></div>
-                    <div className="flex justify-between items-baseline"><span>Переїзд:</span> <span className="font-mono flex items-baseline">{totalReport.relocationConsumption.toFixed(2)} л</span></div>
-                    <div className="flex justify-between items-baseline"><span>МВГ:</span> <span className="font-mono flex items-baseline">{totalReport.maintenanceConsumption.toFixed(2)} л</span></div>
-                    <div className="flex justify-between items-baseline"><span>АМКП:</span> <span className="font-mono flex items-baseline">{totalReport.componentReplacementConsumption.toFixed(2)} л</span></div>
-                    <div className="flex justify-between items-baseline"><span>Додаткові:</span> <span className="font-mono flex items-baseline">{totalReport.additionalConsumption.toFixed(2)} л</span></div>
-                    <Separator className="my-2"/>
-                    <div className="flex justify-between items-baseline font-bold text-base"><span>Всього використано:</span> <span className="font-mono flex items-baseline">{totalReport.totalConsumption.toFixed(2)} л <KgDisplay value={totalReport.totalConsumption} coefficient={kgCoefficient} /></span></div>
-                     <div className="flex justify-between items-baseline font-bold text-base"><span>Загальний залишок:</span> <span className="font-mono flex items-baseline">{totalReport.totalRemaining.toFixed(2)} л <KgDisplay value={totalReport.totalRemaining} coefficient={kgCoefficient} /></span></div>
-                </div>
-            </div>
-        </>
-      )}
     </>
   );
 };

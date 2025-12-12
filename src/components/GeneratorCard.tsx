@@ -197,11 +197,11 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
         <div className="space-y-2">
           <Label htmlFor={`fuelRate-${generator.id}`}>Витрата палива (л/год)</Label>
-          <Input id={`fuelRate-${generator.id}`} type="number" value={generator.fuelRate || ''} onChange={(e) => handleInputChange('fuelRate', e.target.value)} placeholder="напр., 5.5" />
+          <Input id={`fuelRate-${generator.id}`} type="number" value={generator.fuelRate || ''} onChange={(e) => handleInputChange('fuelRate', e.target.value)} />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`initialFuel-${generator.id}`}>Початкове паливо (л)</Label>
-          <Input id={`initialFuel-${generator.id}`} type="number" value={generator.initialFuel || ''} onChange={(e) => handleInputChange('initialFuel', e.target.value)} placeholder="напр., 1000" />
+          <Input id={`initialFuel-${generator.id}`} type="number" value={generator.initialFuel || ''} onChange={(e) => handleInputChange('initialFuel', e.target.value)} />
         </div>
         
         <TimeInput
@@ -220,15 +220,15 @@ export const GeneratorCard: FC<GeneratorCardProps> = ({ generator, onUpdate, onR
 
         <div className="space-y-2">
             <Label htmlFor={`relocation-${generator.id}`} className="flex items-center gap-2"><Truck className="size-4 text-muted-foreground"/>Переїзд (л)</Label>
-            <Input id={`relocation-${generator.id}`} type="number" value={generator.relocation || ''} onChange={(e) => handleInputChange('relocation', e.target.value)} placeholder="напр., 50"/>
+            <Input id={`relocation-${generator.id}`} type="number" value={generator.relocation || ''} onChange={(e) => handleInputChange('relocation', e.target.value)} />
         </div>
         <div className="space-y-2">
             <Label htmlFor={`maintenance-${generator.id}`} className="flex items-center gap-2"><RifleIcon className="size-4 text-muted-foreground"/>МВГ (л)</Label>
-            <Input id={`maintenance-${generator.id}`} type="number" value={generator.maintenance || ''} onChange={(e) => handleInputChange('maintenance', e.target.value)} placeholder="напр., 10"/>
+            <Input id={`maintenance-${generator.id}`} type="number" value={generator.maintenance || ''} onChange={(e) => handleInputChange('maintenance', e.target.value)} />
         </div>
         <div className="space-y-2 col-span-1 md:col-span-2">
             <Label htmlFor={`componentReplacement-${generator.id}`} className="flex items-center gap-2"><Package className="size-4 text-muted-foreground"/>АМКП (л)</Label>
-            <Input id={`componentReplacement-${generator.id}`} type="number" value={generator.componentReplacement || ''} onChange={(e) => handleInputChange('componentReplacement', e.target.value)} placeholder="напр., 5"/>
+            <Input id={`componentReplacement-${generator.id}`} type="number" value={generator.componentReplacement || ''} onChange={(e) => handleInputChange('componentReplacement', e.target.value)} />
         </div>
 
         <div className="space-y-4 col-span-1 md:col-span-2">

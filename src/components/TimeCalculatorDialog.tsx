@@ -70,7 +70,6 @@ export const TimeCalculatorDialog = () => {
               <Input
                 id={`hours-${entry.id}`}
                 type="number"
-                placeholder="Год"
                 value={entry.hours}
                 onChange={e => handleEntryChange(entry.id, 'hours', e.target.value)}
               />
@@ -81,7 +80,6 @@ export const TimeCalculatorDialog = () => {
               <Input
                 id={`minutes-${entry.id}`}
                 type="number"
-                placeholder="Хв"
                 value={entry.minutes}
                 onChange={e => handleEntryChange(entry.id, 'minutes', e.target.value)}
               />

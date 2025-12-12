@@ -149,7 +149,6 @@ export default function HomePage() {
                     type="number"
                     value={kgCoefficient || ''}
                     onChange={(e) => handleCoefficientChange(parseFloat(e.target.value) || 0)}
-                    placeholder="напр., 0.85"
                 />
                 <p className="text-xs text-muted-foreground">Цей коефіцієнт буде застосовано до всіх значень в літрах для розрахунку ваги.</p>
             </div>

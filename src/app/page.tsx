@@ -4,7 +4,7 @@ import type { FC } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import type { GeneratorState, GeneratorAction } from '@/components/GeneratorCard';
 import { GeneratorCard } from '@/components/GeneratorCard';
-import { Fuel, PlusCircle, Weight, Calculator, BarChart3 } from 'lucide-react';
+import { Fuel, PlusCircle, Weight, Calculator, BarChart3, BookMarked } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,9 +16,13 @@ import {
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { TimeCalculatorDialog } from '@/components/TimeCalculatorDialog';
 import { DetailedReportDialog } from '@/components/DetailedReportDialog';
+import type { HistoryEntry } from '@/components/HistoryDialog';
+import { HistoryDialog } from '@/components/HistoryDialog';
+
 
 const STORAGE_KEY_GENERATORS = 'fuelwise_generators_v6';
 const STORAGE_KEY_COEFFICIENT = 'fuelwise_coefficient_v2';
+const STORAGE_KEY_HISTORY = 'fuelwise_history_v1';
 
 const initialGenerators: GeneratorState[] = [
   { id: Date.now() + 1, name: 'Дизельний агрегат 1', fuelRate: 0, initialFuel: 0, scheduledHours: 0, readinessHours: 0, relocation: 0, maintenance: 0, componentReplacement: 0, additionalExpenses: [] },
@@ -39,6 +43,7 @@ const getEmptyGeneratorState = (): Omit<GeneratorState, 'id' | 'name' | 'fuelRat
 export default function HomePage() {
   const [generators, setGenerators] = useState<GeneratorState[]>([]);
   const [kgCoefficient, setKgCoefficient] = useState<number>(0.85);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // --- Data Loading Effect ---
@@ -46,6 +51,7 @@ export default function HomePage() {
     try {
       const savedGenerators = localStorage.getItem(STORAGE_KEY_GENERATORS);
       const savedCoefficient = localStorage.getItem(STORAGE_KEY_COEFFICIENT);
+      const savedHistory = localStorage.getItem(STORAGE_KEY_HISTORY);
       
       if (savedGenerators) {
         const parsedGenerators: Pick<GeneratorState, 'id' | 'name' | 'fuelRate'>[] = JSON.parse(savedGenerators);
@@ -59,6 +65,10 @@ export default function HomePage() {
       
       if (savedCoefficient) {
         setKgCoefficient(parseFloat(savedCoefficient));
+      }
+
+      if (savedHistory) {
+        setHistory(JSON.parse(savedHistory));
       }
     } catch (error) {
       console.error("Could not read from localStorage:", error);
@@ -74,11 +84,12 @@ export default function HomePage() {
         const dataToSave = generators.map(({ id, name, fuelRate }) => ({ id, name, fuelRate }));
         localStorage.setItem(STORAGE_KEY_GENERATORS, JSON.stringify(dataToSave));
         localStorage.setItem(STORAGE_KEY_COEFFICIENT, kgCoefficient.toString());
+        localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
       } catch (error) {
         console.error("Could not write to localStorage:", error);
       }
     }
-  }, [generators, kgCoefficient, isLoaded]);
+  }, [generators, kgCoefficient, history, isLoaded]);
 
   
   const handleGeneratorChange = (generatorId: string | number) => (action: GeneratorAction) => {
@@ -139,6 +150,21 @@ export default function HomePage() {
     setKgCoefficient(value);
   }
 
+  const saveToHistory = (note: string) => {
+    const newEntry: HistoryEntry = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      note: note,
+      generators: JSON.parse(JSON.stringify(generators)), // Deep copy
+      kgCoefficient: kgCoefficient,
+    };
+    setHistory(prev => [newEntry, ...prev]);
+  };
+  
+  const deleteHistoryEntry = (id: number) => {
+    setHistory(prev => prev.filter(entry => entry.id !== id));
+  };
+
   if (!isLoaded) {
     return <div className="min-h-screen flex items-center justify-center">Завантаження...</div>;
   }
@@ -176,14 +202,24 @@ export default function HomePage() {
                 <Button onClick={addGenerator}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Додати агрегат
                 </Button>
-                 <Dialog>
+                <Dialog>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <BookMarked className="mr-2 h-4 w-4" /> Журнал
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl">
+                        <HistoryDialog history={history} onDelete={deleteHistoryEntry} />
+                    </DialogContent>
+                </Dialog>
+                <Dialog>
                     <DialogTrigger asChild>
                         <Button variant="outline">
                             <BarChart3 className="mr-2 h-4 w-4" /> Детальний звіт
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl">
-                        <DetailedReportDialog generators={generators} kgCoefficient={kgCoefficient} />
+                        <DetailedReportDialog generators={generators} kgCoefficient={kgCoefficient} onSave={saveToHistory} />
                     </DialogContent>
                 </Dialog>
                 <Dialog>

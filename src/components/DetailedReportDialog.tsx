@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { Fuel, Clock, Zap, Truck, Package, Pencil, BarChart3, CheckCircle, XCircle } from "lucide-react";
+import { Fuel, Clock, Zap, Truck, Package, Pencil, BarChart3, CheckCircle, XCircle, Inbox } from "lucide-react";
 import { RifleIcon } from "@/components/GeneratorCard";
 
 interface DetailedReportDialogProps {
@@ -72,12 +72,12 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                         </AccordionTrigger>
                         <AccordionContent className="text-sm">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 px-4 py-2 bg-muted/50 rounded-md">
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-medium">
-                                    <span>Початкове паливо:</span>
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                    <div className="flex items-center gap-2"><Inbox className="size-4" />Початкове паливо:</div>
                                     <span className="font-mono flex items-baseline">{(gen.initialFuel || 0).toFixed(2)} л <KgDisplay value={gen.initialFuel || 0} coefficient={kgCoefficient} /></span>
                                 </div>
                                 <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
-                                    <div className="flex items-center gap-2"><Fuel className="size-4 text-accent" /> Всього використано:</div>
+                                    <div className="flex items-center gap-2 text-accent"><Fuel className="size-4" /> Всього використано:</div>
                                     <div className="font-mono font-semibold flex items-baseline">{consumptions.total.toFixed(2)} л <KgDisplay value={consumptions.total} coefficient={kgCoefficient} /></div>
                                 </div>
                                 <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">

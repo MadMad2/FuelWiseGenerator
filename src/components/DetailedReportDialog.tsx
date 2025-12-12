@@ -1,7 +1,7 @@
 "use client";
 
 import type { FC } from 'react';
-import { useMemo } from 'react';
+import React from 'react';
 import type { GeneratorState } from '@/components/GeneratorCard';
 import {
   DialogHeader,
@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
-import { Fuel, Clock, Zap, Truck, Package, Pencil, BarChart3, ChevronDown, CheckCircle, XCircle } from "lucide-react";
+import { Fuel, Clock, Zap, Truck, Package, Pencil, BarChart3, CheckCircle, XCircle } from "lucide-react";
 import { RifleIcon } from "@/components/GeneratorCard";
 
 interface DetailedReportDialogProps {
@@ -20,7 +20,10 @@ interface DetailedReportDialogProps {
 
 const KgDisplay: FC<{ value: number, coefficient: number }> = ({ value, coefficient }) => {
   if (coefficient <= 0 || !isFinite(value) || value === 0) return null;
-  return <span className="text-xs text-destructive ml-2">({(value * coefficient).toFixed(2)} кг)</span>;
+  const kgValue = value * coefficient;
+  // Don't display negative kg values
+  if (kgValue < 0) return null;
+  return <span className="text-xs text-destructive ml-2">({kgValue.toFixed(2)} кг)</span>;
 };
 
 const calculateConsumption = (gen: GeneratorState) => {
@@ -61,11 +64,6 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                             <div className="flex justify-between items-center w-full pr-2">
                                 <span className="font-semibold text-base truncate flex-1 text-left">{gen.name}</span>
                                 <div className="flex items-center gap-3 text-sm">
-                                    {hasEnoughFuel ? (
-                                        <CheckCircle className="size-5 text-green-500" />
-                                    ) : (
-                                        <XCircle className="size-5 text-destructive" />
-                                    )}
                                     <div className="text-right">
                                         <span className="text-muted-foreground">Залишок:</span>
                                         <span className={`font-mono ml-2 ${hasEnoughFuel ? '' : 'text-destructive'}`}>{consumptions.remaining.toFixed(2)} л</span>
@@ -78,6 +76,17 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                                 <div className="sm:col-span-2 flex justify-between items-baseline text-base font-medium">
                                     <span>Початкове паливо:</span>
                                     <span className="font-mono flex items-baseline">{(gen.initialFuel || 0).toFixed(2)} л <KgDisplay value={gen.initialFuel || 0} coefficient={kgCoefficient} /></span>
+                                </div>
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                    <div className="flex items-center gap-2"><Fuel className="size-4 text-accent" /> Всього використано:</div>
+                                    <div className="font-mono font-semibold flex items-baseline">{consumptions.total.toFixed(2)} л <KgDisplay value={consumptions.total} coefficient={kgCoefficient} /></div>
+                                </div>
+                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
+                                    <div className={`flex items-center gap-2 ${consumptions.remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                        {consumptions.remaining >= 0 ? <CheckCircle className="size-4"/> : <XCircle className="size-4"/>}
+                                        Залишок палива:
+                                    </div>
+                                    <div className="font-mono font-semibold flex items-baseline">{consumptions.remaining.toFixed(2)} л <KgDisplay value={consumptions.remaining} coefficient={kgCoefficient} /></div>
                                 </div>
                                 
                                 <Separator className="my-1 sm:col-span-2" />
@@ -104,19 +113,6 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                                     </React.Fragment>
                                 ))}
 
-                                <Separator className="my-1 sm:col-span-2" />
-
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
-                                    <div className="flex items-center gap-2"><Fuel className="size-4 text-accent" /> Всього використано:</div>
-                                    <div className="font-mono font-semibold flex items-baseline">{consumptions.total.toFixed(2)} л <KgDisplay value={consumptions.total} coefficient={kgCoefficient} /></div>
-                                </div>
-                                <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
-                                    <div className={`flex items-center gap-2 ${consumptions.remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                                        {consumptions.remaining >= 0 ? <CheckCircle className="size-4"/> : <XCircle className="size-4"/>}
-                                        Залишок палива:
-                                    </div>
-                                    <div className="font-mono font-semibold flex items-baseline">{consumptions.remaining.toFixed(2)} л <KgDisplay value={consumptions.remaining} coefficient={kgCoefficient} /></div>
-                                </div>
                             </div>
                         </AccordionContent>
                     </AccordionItem>

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Fuel, Clock, Zap, Package, Trash2, PlusCircle, Truck, Pencil, Cog } from "lucide-react";
 
 // Inline SVG for the rifle icon
-const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
+export const RifleIcon: FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width="16"

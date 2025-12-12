@@ -21,7 +21,6 @@ interface DetailedReportDialogProps {
 const KgDisplay: FC<{ value: number, coefficient: number }> = ({ value, coefficient }) => {
   if (coefficient <= 0 || !isFinite(value) || value === 0) return null;
   const kgValue = value * coefficient;
-  // Don't display negative kg values
   if (kgValue < 0) return null;
   return <span className="text-xs text-destructive ml-2">({kgValue.toFixed(2)} кг)</span>;
 };
@@ -82,8 +81,8 @@ export const DetailedReportDialog: FC<DetailedReportDialogProps> = ({ generators
                                     <div className="font-mono font-semibold flex items-baseline">{consumptions.total.toFixed(2)} л <KgDisplay value={consumptions.total} coefficient={kgCoefficient} /></div>
                                 </div>
                                 <div className="sm:col-span-2 flex justify-between items-baseline text-base font-semibold">
-                                    <div className={`flex items-center gap-2 ${consumptions.remaining >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                                        {consumptions.remaining >= 0 ? <CheckCircle className="size-4"/> : <XCircle className="size-4"/>}
+                                    <div className={`flex items-center gap-2 ${hasEnoughFuel ? 'text-primary' : 'text-destructive'}`}>
+                                        {hasEnoughFuel ? <CheckCircle className="size-4"/> : <XCircle className="size-4"/>}
                                         Залишок палива:
                                     </div>
                                     <div className="font-mono font-semibold flex items-baseline">{consumptions.remaining.toFixed(2)} л <KgDisplay value={consumptions.remaining} coefficient={kgCoefficient} /></div>
